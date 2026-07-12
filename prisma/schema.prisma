@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SituacaoAlvara {
+  PRONTO
+  EM_ANDAMENTO
+  PENDENTE
+  NAO_APLICAVEL
+}
+
+enum TipoCliente {
+  PRINCIPAL
+  SECUNDARIO
+  PROSPECT
+  INATIVO
+}
+
+enum RegimeTributario {
+  SIMPLES_NACIONAL
+  LUCRO_PRESUMIDO
+  LUCRO_REAL
+  MEI
+  ISENTO
+}
+
+enum Ranking {
+  C
+  B
+  A
+  S
+  SS
+}
+
+enum TipoVinculo {
+  SOCIO_EM_OUTRA_EMPRESA
+  VINCULO_DE_INTERESSE
+}
+
+model Empresa {
+  id                       String             @id @default(cuid())
+  razaoSocial              String
+  nomeFantasia             String
+  cnpj                     String             @unique
+  inscricaoEstadual        String?
+  inscricaoMunicipal       String?
+  endereco                 String
+  numero                   String?
+  complemento              String?
+  bairro                   String?
+  cidade                   String
+  uf                       String             @db.Char(2)
+  cep                      String?
+  pontoReferencia          String?
+  email                    String?
+  telefone1                String?
+  telefone2                String?
+  capitalSocial            Decimal?           @db.Decimal(15, 2)
+  cnaePrincipal            String
+  cnaesSecundarios         String[]
+  ramoAtividade            String
+  servicoProduto           String
+  quantidadeFuncionarios   Int                @default(0)
+  tempoEmpresa             String?
+  historicoAlteracoes      String[]
+  dataEntrada              DateTime
+  responsavelAnterior      String?
+  situacaoAlvaras          SituacaoAlvara     @default(PENDENTE)
+  participaLicitacoes      Boolean            @default(false)
+  tipoCliente              TipoCliente        @default(PRINCIPAL)
+  regimeTributario         RegimeTributario
+  dataBaixa                DateTime?
+  irpfSociosNaContabilidade Boolean           @default(false)
+  dataAtualizacaoBancaria  DateTime?
+  pendenciasFiscais        Boolean            @default(false)
+  ranking                  Ranking            @default(C)
+  socios                   EmpresaSocio[]
+  vinculosRecebidos        SocioVinculo[]      @relation("EmpresaDestino")
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
+  @@index([razaoSocial])
+  @@index([nomeFantasia])
+}
+
+model Socio {
+  id        String         @id @default(cuid())
+  nome      String
+  cpf       String         @unique
+  endereco  String
+  empresas  EmpresaSocio[]
+  vinculos  SocioVinculo[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model EmpresaSocio {
+  empresa       Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId     String
+  socio         Socio   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  socioId       String
+  participacao  Decimal? @db.Decimal(5, 2)
+  cargo         String?
+
+  @@id([empresaId, socioId])
+}
+
+model SocioVinculo {
+  id               String      @id @default(cuid())
+  socio            Socio       @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  socioId          String
+  tipo             TipoVinculo
+  descricao        String
+  empresaDestino   Empresa?    @relation("EmpresaDestino", fields: [empresaDestinoId], references: [id], onDelete: SetNull)
+  empresaDestinoId String?
+  createdAt        DateTime    @default(now())
+
+  @@index([socioId])
+  @@index([empresaDestinoId])
+}

@@ -1,0 +1,137 @@
+:root {
+  --ink: #17203b;
+  --muted: #6d7486;
+  --line: #dfe3eb;
+  --paper: #ffffff;
+  --bg: #f3f5f9;
+  --primary: #252f7f;
+  --primary-2: #4a56b5;
+  --success: #18775a;
+  --warn: #a76713;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--ink); background: var(--bg); }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+.app-shell { min-height: 100vh; }
+.topbar { height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 4vw; color: white; background: linear-gradient(120deg, #191f59, #303b9a); box-shadow: 0 8px 24px #222a6a24; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.02em; }
+.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #ffffff55; border-radius: 10px; background: #ffffff18; }
+.brand small { display: block; margin-top: 1px; font-size: 10px; font-weight: 500; letter-spacing: .12em; opacity: .65; text-transform: uppercase; }
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.container { width: min(1180px, 92vw); margin: 34px auto 64px; }
+.eyebrow { margin: 0 0 6px; color: var(--primary-2); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.04em; }
+.subtitle { max-width: 640px; margin: 8px 0 0; color: var(--muted); line-height: 1.55; }
+.hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 0; border-radius: 10px; color: white; background: var(--primary); font-weight: 700; box-shadow: 0 6px 18px #252f7f24; }
+.button.secondary { color: var(--ink); background: white; border: 1px solid var(--line); box-shadow: none; }
+.button.danger { color: #a52828; background: #fff5f5; border: 1px solid #f1cccc; box-shadow: none; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 28px 0; }
+.stat, .panel { background: white; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 32px #252f7f0a; }
+.stat { padding: 20px; }
+.stat-label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.stat-value { margin-top: 7px; font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
+.panel { overflow: hidden; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; border-bottom: 1px solid var(--line); }
+.panel-title { margin: 0; font-size: 17px; }
+.search { width: min(360px, 100%); padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; outline: none; background: #f9fafc; }
+.search:focus, .field input:focus, .field select:focus, .field textarea:focus { border-color: #737fcc; box-shadow: 0 0 0 3px #737fcc1c; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 15px 20px; border-bottom: 1px solid #eceef3; text-align: left; white-space: nowrap; }
+th { color: var(--muted); background: #fafbfc; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+td { font-size: 14px; }
+tr:last-child td { border-bottom: 0; }
+.company-name { font-weight: 750; }
+.company-legal { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.badge { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; color: var(--primary); background: #eef0ff; font-size: 11px; font-weight: 800; }
+.badge.green { color: var(--success); background: #eaf8f2; }
+.badge.orange { color: var(--warn); background: #fff4e5; }
+.row-actions { display: flex; gap: 8px; }
+.icon-link { display: inline-grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: white; }
+.empty { padding: 58px 20px; color: var(--muted); text-align: center; }
+
+.form-shell { width: min(980px, 92vw); margin: 30px auto 70px; }
+.back { display: inline-flex; margin-bottom: 18px; color: var(--muted); font-size: 14px; }
+.form-card { padding: 28px; background: white; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 14px 40px #252f7f0b; }
+.form-section { padding: 24px 0; border-bottom: 1px solid var(--line); }
+.form-section:first-of-type { padding-top: 8px; }
+.form-section:last-of-type { border: 0; }
+.section-title { margin: 0 0 16px; font-size: 15px; }
+.form-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+.field { grid-column: span 4; }
+.field.span-6 { grid-column: span 6; }
+.field.span-8 { grid-column: span 8; }
+.field.span-12 { grid-column: span 12; }
+.field label { display: block; margin-bottom: 7px; color: #4f5668; font-size: 12px; font-weight: 700; }
+.field input, .field select, .field textarea { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; outline: none; background: #fcfcfd; }
+.field textarea { min-height: 76px; resize: vertical; }
+.check-field { display: flex; align-items: center; gap: 9px; min-height: 42px; padding-top: 22px; font-size: 13px; font-weight: 650; }
+.check-field input { width: 17px; height: 17px; accent-color: var(--primary); }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 22px; }
+
+/* Ficha cadastral */
+.print-toolbar { display: flex; align-items: center; justify-content: space-between; width: min(210mm, 94vw); margin: 22px auto 14px; }
+.sheet { position: relative; width: 210mm; min-height: 297mm; margin: 0 auto 40px; padding: 7mm; color: #111; background: white; box-shadow: 0 18px 60px #151b3826; font-family: Arial, Helvetica, sans-serif; }
+.sheet-content { padding-bottom: 34mm; }
+.sheet-box { border: .45mm solid #111; border-bottom: 0; page-break-inside: avoid; break-inside: avoid; }
+.sheet-box:last-child { border-bottom: .45mm solid #111; }
+.sheet-header { display: grid; grid-template-columns: 38% 62%; height: 25mm; border: .65mm solid #111; }
+.sheet-logo { display: flex; align-items: center; justify-content: center; gap: 3mm; border-right: .65mm solid #111; }
+.sheet-logo-mark { display: flex; align-items: flex-end; gap: 1mm; height: 15mm; }
+.sheet-logo-mark i { display: block; width: 4mm; background: #252f91; transform: skew(-17deg); }
+.sheet-logo-mark i:nth-child(1) { height: 8mm; }.sheet-logo-mark i:nth-child(2) { height: 15mm; }.sheet-logo-mark i:nth-child(3) { height: 13mm; }
+.sheet-logo strong { display: block; color: #252f91; font-size: 13pt; line-height: .95; }
+.sheet-logo small { color: #555; font-size: 6pt; letter-spacing: .06em; }
+.sheet-title { display: grid; place-items: center; font-family: Georgia, serif; font-size: 25pt; font-weight: 800; text-decoration: underline; }
+.bar { padding: 1.1mm 2mm; border-bottom: .45mm solid #111; background: #d8d8d8; font-size: 9pt; font-weight: 800; text-align: center; text-transform: uppercase; }
+.bar:last-child { border-bottom: 0; }
+.grid { display: grid; }
+.g-2 { grid-template-columns: repeat(2, 1fr); }.g-3 { grid-template-columns: repeat(3, 1fr); }.g-4 { grid-template-columns: repeat(4, 1fr); }
+.cell { min-height: 11mm; padding: 1.1mm 1.5mm; border-right: .35mm solid #111; border-bottom: .35mm solid #111; overflow-wrap: anywhere; }
+.grid .cell:last-child { border-right: 0; }
+.cell-label { display: block; margin-bottom: .9mm; font-size: 5.8pt; font-weight: 800; text-transform: uppercase; }
+.cell-value { display: block; font-size: 8pt; line-height: 1.1; }
+.cell.compact { min-height: 8mm; }.cell.compact .cell-value { font-size: 7pt; }
+.company-row { display: grid; grid-template-columns: 1fr 30mm; }
+.company-row > *:first-child { border-right: .35mm solid #111; }
+.partners-head { display: grid; grid-template-columns: 1fr 39mm 18mm; }
+.partners-head div { padding: 1mm; border-right: .35mm solid #111; background: #d8d8d8; font-size: 8pt; font-weight: 800; text-align: center; text-transform: uppercase; }
+.partners-head div:last-child { border-right: 0; }
+.partner { display: grid; grid-template-columns: 1fr 39mm 18mm; min-height: 10mm; border-top: .35mm solid #111; }
+.partner > div { padding: 1mm 1.5mm; border-right: .35mm solid #111; font-size: 7.4pt; }
+.partner > div:last-child { border-right: 0; text-align: center; }
+.partner-note { display: block; margin-top: .6mm; font-size: 6.4pt; font-style: italic; }
+.inline-data { padding: 1.5mm; border-bottom: .35mm solid #111; font-size: 7.5pt; line-height: 1.35; }
+.inline-data:last-child { border-bottom: 0; }
+.choice { white-space: nowrap; }
+.history { font-size: 6.5pt; }
+.workflow { position: absolute; right: 7mm; bottom: 7mm; left: 7mm; border: .55mm solid #111; page-break-inside: avoid; break-inside: avoid; }
+.workflow-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+.workflow-item { min-height: 17mm; padding: 1.5mm; border-right: .35mm solid #111; font-size: 7pt; text-align: center; }
+.workflow-item:last-child { border-right: 0; }
+.workflow-check { display: inline-block; width: 3.2mm; height: 3.2mm; margin-right: 1mm; border: .35mm solid #111; vertical-align: -0.6mm; }
+.signature-line { margin-top: 5mm; font-size: 6pt; }
+
+@media (max-width: 760px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .hero-row, .panel-head { align-items: stretch; flex-direction: column; }
+  .field, .field.span-6, .field.span-8 { grid-column: span 12; }
+  .sheet { transform-origin: top left; }
+  .topbar { padding: 0 4vw; }
+}
+
+@page { size: A4 portrait; margin: 0; }
+@media print {
+  html, body { width: 210mm; height: 297mm; margin: 0 !important; padding: 0 !important; background: white !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .no-print { display: none !important; }
+  .sheet { width: 210mm; height: 297mm; min-height: 297mm; margin: 0; padding: 7mm; overflow: hidden; box-shadow: none; }
+  .sheet-content { height: 100%; padding-bottom: 34mm; }
+  .sheet-box, .sheet-header, .partner, .workflow { page-break-inside: avoid !important; break-inside: avoid !important; }
+  .workflow { position: absolute; right: 7mm; bottom: 7mm; left: 7mm; }
+}
