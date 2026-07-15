@@ -42,47 +42,107 @@ enum TipoVinculo {
   VINCULO_DE_INTERESSE
 }
 
+enum TipoContatoEmpresa {
+  PRINCIPAL
+  SOCIETARIO
+  FISCAL
+  CONTABIL
+  DEPARTAMENTO_PESSOAL
+  FINANCEIRO
+  OUTRO
+}
+
+enum TitularCertificado {
+  PJ
+  PF
+}
+
+enum TipoCertificado {
+  A1
+  A3
+  NUVEM
+  OUTRO
+}
+
+enum TipoAlteracaoEmpresa {
+  ENDERECO
+  ATIVIDADES
+  RAZAO_SOCIAL
+  CAPITAL_SOCIAL
+  REGIME_TRIBUTARIO
+  CONTATOS
+  SOCIOS_ENTRADA
+  SOCIOS_SAIDA
+  SOCIOS_ENTRADA_E_SAIDA
+  SEM_ALTERACAO_SOCIOS
+  OUTRA
+}
+
+enum TipoDocumentoEmpresa {
+  CARTAO_CNPJ
+  CONTRATO_SOCIAL
+  ALTERACAO_CONTRATUAL
+  BIC
+  TEC
+  ALVARA
+  OUTRO
+}
+
 model Empresa {
-  id                       String             @id @default(cuid())
-  razaoSocial              String
-  nomeFantasia             String
-  cnpj                     String             @unique
-  inscricaoEstadual        String?
-  inscricaoMunicipal       String?
-  endereco                 String
-  numero                   String?
-  complemento              String?
-  bairro                   String?
-  cidade                   String
-  uf                       String             @db.Char(2)
-  cep                      String?
-  pontoReferencia          String?
-  email                    String?
-  telefone1                String?
-  telefone2                String?
-  capitalSocial            Decimal?           @db.Decimal(15, 2)
-  cnaePrincipal            String
-  cnaesSecundarios         String[]
-  ramoAtividade            String
-  servicoProduto           String
-  quantidadeFuncionarios   Int                @default(0)
-  tempoEmpresa             String?
-  historicoAlteracoes      String[]
-  dataEntrada              DateTime
-  responsavelAnterior      String?
-  situacaoAlvaras          SituacaoAlvara     @default(PENDENTE)
-  participaLicitacoes      Boolean            @default(false)
-  tipoCliente              TipoCliente        @default(PRINCIPAL)
-  regimeTributario         RegimeTributario
-  dataBaixa                DateTime?
-  irpfSociosNaContabilidade Boolean           @default(false)
-  dataAtualizacaoBancaria  DateTime?
-  pendenciasFiscais        Boolean            @default(false)
-  ranking                  Ranking            @default(C)
-  socios                   EmpresaSocio[]
-  vinculosRecebidos        SocioVinculo[]      @relation("EmpresaDestino")
-  createdAt                DateTime            @default(now())
-  updatedAt                DateTime            @updatedAt
+  id                        String               @id @default(cuid())
+  razaoSocial               String
+  nomeFantasia              String
+  cnpj                      String               @unique
+  inscricaoEstadual         String?
+  inscricaoMunicipal        String?
+  dataAbertura              DateTime?
+  naturezaJuridica          String?
+  porte                     String?
+  nire                      String?
+  situacaoCadastral         String?
+  dataSituacaoCadastral     DateTime?
+  endereco                  String
+  numero                    String?
+  complemento               String?
+  bairro                    String?
+  cidade                    String
+  uf                        String               @db.Char(2)
+  cep                       String?
+  pontoReferencia           String?
+  email                     String?
+  telefone1                 String?
+  telefone2                 String?
+  capitalSocial             Decimal?             @db.Decimal(15, 2)
+  cnaePrincipal             String
+  cnaesSecundarios          String[]
+  ramoAtividade             String
+  servicoProduto            String
+  quantidadeFuncionarios    Int                  @default(0)
+  tempoEmpresa              String?
+  historicoAlteracoes       String[]
+  dataEntrada               DateTime
+  dataSaidaEscritorio       DateTime?
+  motivoSaidaEscritorio     String?
+  responsavelInterno        String?
+  responsavelAnterior       String?
+  situacaoAlvaras           SituacaoAlvara       @default(PENDENTE)
+  participaLicitacoes       Boolean              @default(false)
+  tipoCliente               TipoCliente          @default(PRINCIPAL)
+  regimeTributario          RegimeTributario
+  dataBaixa                 DateTime?
+  irpfSociosNaContabilidade Boolean              @default(false)
+  dataAtualizacaoBancaria   DateTime?
+  pendenciasFiscais         Boolean              @default(false)
+  ranking                   Ranking              @default(C)
+  observacoesInternas       String?
+  socios                    EmpresaSocio[]
+  vinculosRecebidos         SocioVinculo[]       @relation("EmpresaDestino")
+  contatos                  ContatoEmpresa[]
+  certificados              CertificadoDigital[]
+  alteracoes                AlteracaoEmpresa[]
+  documentos                DocumentoEmpresa[]
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
 
   @@index([razaoSocial])
   @@index([nomeFantasia])
@@ -93,6 +153,8 @@ model Socio {
   nome      String
   cpf       String         @unique
   endereco  String
+  email     String?
+  telefone  String?
   empresas  EmpresaSocio[]
   vinculos  SocioVinculo[]
   createdAt DateTime       @default(now())
@@ -100,14 +162,83 @@ model Socio {
 }
 
 model EmpresaSocio {
-  empresa       Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresa       Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   empresaId     String
-  socio         Socio   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  socio         Socio     @relation(fields: [socioId], references: [id], onDelete: Cascade)
   socioId       String
-  participacao  Decimal? @db.Decimal(5, 2)
+  participacao  Decimal?  @db.Decimal(5, 2)
   cargo         String?
+  administrador Boolean   @default(false)
+  dataEntrada   DateTime?
+  dataSaida     DateTime?
 
   @@id([empresaId, socioId])
+}
+
+model ContatoEmpresa {
+  id          String             @id @default(cuid())
+  empresa     Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId   String
+  nome        String
+  cargo       String?
+  tipo        TipoContatoEmpresa @default(PRINCIPAL)
+  telefone    String?
+  whatsapp    String?
+  email       String?
+  principal   Boolean            @default(false)
+  observacoes String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([empresaId])
+}
+
+model CertificadoDigital {
+  id               String             @id @default(cuid())
+  empresa          Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId        String
+  titularTipo      TitularCertificado
+  titularNome      String
+  titularDocumento String
+  tipo             TipoCertificado
+  emissora         String?
+  dataEmissao      DateTime?
+  dataVencimento   DateTime
+  revogadoEm       DateTime?
+  observacoes      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([empresaId, dataVencimento])
+  @@index([titularDocumento])
+}
+
+model AlteracaoEmpresa {
+  id          String               @id @default(cuid())
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId   String
+  data        DateTime
+  tipo        TipoAlteracaoEmpresa
+  descricao   String
+  observacoes String?
+  createdAt   DateTime             @default(now())
+
+  @@index([empresaId, data])
+}
+
+model DocumentoEmpresa {
+  id          String               @id @default(cuid())
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId   String
+  tipo        TipoDocumentoEmpresa
+  nomeArquivo String
+  mimeType    String
+  tamanho     Int
+  conteudo    Bytes
+  observacoes String?
+  createdAt   DateTime             @default(now())
+
+  @@index([empresaId, tipo])
 }
 
 model SocioVinculo {

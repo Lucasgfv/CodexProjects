@@ -4,4 +4,7 @@ node_modules
 .docker-runtime
 *.log
 prisma/dev.db
+backups/
+*.backup
+.pnpm-store/
 

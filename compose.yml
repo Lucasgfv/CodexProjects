@@ -23,6 +23,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/autcompany?schema=public
       WATCHPACK_POLLING: "true"
+      CI: "true"
     ports:
       - "3000:3000"
     volumes:

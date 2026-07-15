@@ -11,5 +11,5 @@ export default async function EditarEmpresa({ params }: { params: Promise<{ id: 
   const company = await prisma.empresa.findUnique({ where: { id } });
   if (!company) notFound();
   const action = updateEmpresa.bind(null, id);
-  return <main className="form-shell"><Link className="back" href={`/empresas/${id}`}>← Voltar para ficha</Link><CompanyForm action={action} company={company as unknown as Record<string, unknown>} /></main>;
+  return <main className="form-shell"><Link className="back" href={`/empresas/${id}`}>← Voltar para o cadastro</Link><CompanyForm action={action} company={company as unknown as Record<string, unknown>} /></main>;
 }
