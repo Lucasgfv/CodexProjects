@@ -5,7 +5,7 @@ const UFS = new Set([
 ]);
 
 const SITUACOES_ALVARA = new Set(["PRONTO", "EM_ANDAMENTO", "PENDENTE", "NAO_APLICAVEL"]);
-const TIPOS_CLIENTE = new Set(["PRINCIPAL", "SECUNDARIO", "PROSPECT", "INATIVO"]);
+const TIPOS_CLIENTE = new Set(["PRINCIPAL", "SECUNDARIO", "PROSPECT"]);
 const REGIMES = new Set(["SIMPLES_NACIONAL", "LUCRO_PRESUMIDO", "LUCRO_REAL", "MEI", "ISENTO"]);
 const RANKINGS = new Set(["C", "B", "A", "S", "SS"]);
 
@@ -69,12 +69,25 @@ function parseDecimal(value: string) {
   return /^\d+(\.\d{1,2})?$/.test(normalized) ? normalized : null;
 }
 
-function enumValue(value: string, allowed: Set<string>, fallback: string) {
-  return allowed.has(value) ? value : fallback;
-}
-
 function list(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+}
+
+export function isValidPhone(value: string) {
+  const normalized = digits(value);
+  return normalized.length === 10 || normalized.length === 11;
+}
+
+export function isValidCnae(value: string) {
+  return /^\d{2}\.?\d{2}-?\d-?\d{2}(?:\s|$)/.test(value.trim());
+}
+
+function normalizeCnae(value: string) {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{2})\.?([0-9]{2})-?(\d)-?(\d{2})(.*)$/);
+  if (!match) return trimmed;
+  const description = match[5].replace(/^\s*-?\s*/, "").trim();
+  return `${match[1]}.${match[2]}-${match[3]}-${match[4]}${description ? ` - ${description}` : ""}`;
 }
 
 export function validateCompanyForm(form: FormData) {
@@ -87,6 +100,12 @@ export function validateCompanyForm(form: FormData) {
   const quantidadeRaw = text(form, "quantidadeFuncionarios") || "0";
   const capitalRaw = text(form, "capitalSocial");
   const dataEntradaRaw = text(form, "dataEntrada");
+  const cnaePrincipalRaw = text(form, "cnaePrincipal");
+  const cnaesSecundariosRaw = list(text(form, "cnaesSecundarios"));
+  const situacaoAlvarasRaw = text(form, "situacaoAlvaras");
+  const tipoClienteRaw = text(form, "tipoCliente");
+  const regimeTributarioRaw = text(form, "regimeTributario");
+  const rankingRaw = text(form, "ranking");
 
   const required: Array<[string, string]> = [
     ["razaoSocial", "Informe a razão social."],
@@ -106,11 +125,20 @@ export function validateCompanyForm(form: FormData) {
   if (uf && !UFS.has(uf)) fieldErrors.uf = "Selecione uma UF válida.";
   if (cepRaw && cep?.length !== 8) fieldErrors.cep = "O CEP deve ter 8 dígitos.";
   if (emailRaw && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) fieldErrors.email = "Informe um e-mail válido.";
+  for (const key of ["telefone1", "telefone2"] as const) {
+    if (text(form, key) && !isValidPhone(text(form, key))) fieldErrors[key] = "Informe telefone com DDD e 10 ou 11 dígitos.";
+  }
   if (parseNonNegativeInteger(quantidadeRaw) === null) fieldErrors.quantidadeFuncionarios = "Informe uma quantidade válida.";
   if (capitalRaw && parseDecimal(capitalRaw) === null) fieldErrors.capitalSocial = "Informe o capital com até duas casas decimais.";
   if (dataEntradaRaw && !parseDate(dataEntradaRaw)) fieldErrors.dataEntrada = "Informe uma data de entrada válida.";
+  if (cnaePrincipalRaw && !isValidCnae(cnaePrincipalRaw)) fieldErrors.cnaePrincipal = "Informe um CNAE válido com 7 dígitos.";
+  if (cnaesSecundariosRaw.some((value) => !isValidCnae(value))) fieldErrors.cnaesSecundarios = "Revise os CNAEs secundários; use um código válido por linha.";
+  if (!SITUACOES_ALVARA.has(situacaoAlvarasRaw)) fieldErrors.situacaoAlvaras = "Selecione uma situação de alvará válida.";
+  if (!TIPOS_CLIENTE.has(tipoClienteRaw)) fieldErrors.tipoCliente = "Selecione um tipo de cliente válido.";
+  if (!REGIMES.has(regimeTributarioRaw)) fieldErrors.regimeTributario = "Selecione um regime tributário válido.";
+  if (!RANKINGS.has(rankingRaw)) fieldErrors.ranking = "Selecione um ranking válido.";
 
-  const optionalDates = ["dataAbertura", "dataSituacaoCadastral", "dataSaidaEscritorio", "dataBaixa", "dataAtualizacaoBancaria"];
+  const optionalDates = ["dataAbertura", "dataSituacaoCadastral", "dataBaixa", "dataAtualizacaoBancaria"];
   for (const key of optionalDates) if (text(form, key) && !parseDate(text(form, key))) fieldErrors[key] = "Informe uma data válida.";
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -143,26 +171,24 @@ export function validateCompanyForm(form: FormData) {
       telefone1: digits(text(form, "telefone1")) || null,
       telefone2: digits(text(form, "telefone2")) || null,
       capitalSocial: capitalRaw ? parseDecimal(capitalRaw) : null,
-      cnaePrincipal: text(form, "cnaePrincipal"),
-      cnaesSecundarios: list(text(form, "cnaesSecundarios")),
+      cnaePrincipal: normalizeCnae(cnaePrincipalRaw),
+      cnaesSecundarios: cnaesSecundariosRaw.map(normalizeCnae),
       ramoAtividade: text(form, "ramoAtividade"),
       servicoProduto: text(form, "servicoProduto"),
       quantidadeFuncionarios: parseNonNegativeInteger(quantidadeRaw) ?? 0,
       tempoEmpresa: optionalText(form, "tempoEmpresa"),
       dataEntrada: parseDate(dataEntradaRaw)!,
-      dataSaidaEscritorio: parseDate(text(form, "dataSaidaEscritorio")),
-      motivoSaidaEscritorio: optionalText(form, "motivoSaidaEscritorio"),
       responsavelInterno: optionalText(form, "responsavelInterno"),
       responsavelAnterior: optionalText(form, "responsavelAnterior"),
-      situacaoAlvaras: enumValue(text(form, "situacaoAlvaras"), SITUACOES_ALVARA, "PENDENTE") as "PRONTO" | "EM_ANDAMENTO" | "PENDENTE" | "NAO_APLICAVEL",
+      situacaoAlvaras: situacaoAlvarasRaw as "PRONTO" | "EM_ANDAMENTO" | "PENDENTE" | "NAO_APLICAVEL",
       participaLicitacoes: form.get("participaLicitacoes") === "on",
-      tipoCliente: enumValue(text(form, "tipoCliente"), TIPOS_CLIENTE, "PRINCIPAL") as "PRINCIPAL" | "SECUNDARIO" | "PROSPECT" | "INATIVO",
-      regimeTributario: enumValue(text(form, "regimeTributario"), REGIMES, "SIMPLES_NACIONAL") as "SIMPLES_NACIONAL" | "LUCRO_PRESUMIDO" | "LUCRO_REAL" | "MEI" | "ISENTO",
+      tipoCliente: tipoClienteRaw as "PRINCIPAL" | "SECUNDARIO" | "PROSPECT",
+      regimeTributario: regimeTributarioRaw as "SIMPLES_NACIONAL" | "LUCRO_PRESUMIDO" | "LUCRO_REAL" | "MEI" | "ISENTO",
       dataBaixa: parseDate(text(form, "dataBaixa")),
       irpfSociosNaContabilidade: form.get("irpfSociosNaContabilidade") === "on",
       dataAtualizacaoBancaria: parseDate(text(form, "dataAtualizacaoBancaria")),
       pendenciasFiscais: form.get("pendenciasFiscais") === "on",
-      ranking: enumValue(text(form, "ranking"), RANKINGS, "C") as "C" | "B" | "A" | "S" | "SS",
+      ranking: rankingRaw as "C" | "B" | "A" | "S" | "SS",
       observacoesInternas: optionalText(form, "observacoesInternas"),
     },
   };

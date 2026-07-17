@@ -1,6 +1,11 @@
 node_modules
+.pnpm-store
 .next
 .git
 .env
 .docker-runtime
 *.log
+backups
+*.dump
+*.backup
+tsconfig.tsbuildinfo

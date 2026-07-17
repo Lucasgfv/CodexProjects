@@ -1,38 +1,35 @@
-import { parseCnpjCardText } from "@/lib/cnpj-card";
-import { extractText, getDocumentProxy } from "unpdf";
+import { canEditCompanies, getCurrentUser } from "@/lib/authz";
+import { extractCnpjCard } from "@/lib/cnpj-ocr";
+import { logSafeError } from "@/lib/logger";
+import { validateUpload } from "@/lib/upload-validation";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user || user.deveTrocarSenha || !canEditCompanies(user.papel)) return NextResponse.json({ message: "Acesso não autorizado." }, { status: 401 });
+
   try {
     const form = await request.formData();
     const file = form.get("cartaoCnpj");
-    if (!(file instanceof File) || file.size === 0) {
-      return NextResponse.json({ message: "Selecione o Cartão CNPJ em PDF." }, { status: 400 });
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ message: "O PDF deve ter no máximo 5 MB." }, { status: 400 });
-    }
-    if (file.type !== "application/pdf" && !file.name.toLocaleLowerCase("pt-BR").endsWith(".pdf")) {
-      return NextResponse.json({ message: "Envie um arquivo PDF válido." }, { status: 400 });
-    }
+    if (!(file instanceof File) || file.size === 0) return NextResponse.json({ message: "Selecione o Cartão CNPJ em PDF, JPG ou PNG." }, { status: 400 });
+    const validation = await validateUpload(file);
+    if (!validation.ok) return NextResponse.json({ message: validation.error }, { status: 400 });
 
-    const pdf = await getDocumentProxy(new Uint8Array(await file.arrayBuffer()));
-    const result = await extractText(pdf, { mergePages: true });
-    const data = parseCnpjCardText(result.text);
-
-    if (!data.cnpj || !data.razaoSocial) {
-      return NextResponse.json({
-        message: "Não foi possível reconhecer os dados. Use o PDF original da Receita Federal, com texto selecionável.",
-      }, { status: 422 });
-    }
-
-    return NextResponse.json({ data, message: "Dados importados. Confira as informações antes de salvar." });
-  } catch {
-    return NextResponse.json({ message: "Não foi possível ler o PDF enviado." }, { status: 422 });
+    const extraction = await extractCnpjCard(new Uint8Array(await file.arrayBuffer()), validation.mimeType, file.name);
+    return NextResponse.json({
+      data: extraction.data,
+      source: extraction.source,
+      confidence: extraction.confidence,
+      message: extraction.warning ?? "Dados importados do texto do PDF. Confira as informações antes de salvar.",
+    });
+  } catch (error) {
+    const eventId = logSafeError("cnpj.importar", error);
+    const message = error instanceof Error && error.message === "OCR_INSUFFICIENT"
+      ? "O OCR não reconheceu CNPJ e razão social com segurança. Preencha os dados manualmente."
+      : `Não foi possível ler o arquivo enviado. Código: ${eventId}.`;
+    return NextResponse.json({ message }, { status: 422 });
   }
 }
-

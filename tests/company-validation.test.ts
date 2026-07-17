@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isValidCnpj, isValidCpf, normalizeCnpj, parseDate } from "../lib/company-validation";
+import { isValidCnae, isValidCnpj, isValidCpf, isValidPhone, normalizeCnpj, parseDate } from "../lib/company-validation";
 
 test("normaliza e valida CNPJ numérico", () => {
   assert.equal(normalizeCnpj("11.222.333/0001-81"), "11222333000181");
@@ -21,4 +21,12 @@ test("valida CPF e rejeita sequências repetidas", () => {
 test("rejeita datas inexistentes", () => {
   assert.equal(parseDate("2026-02-31"), null);
   assert.equal(parseDate("2026-02-28")?.toISOString(), "2026-02-28T00:00:00.000Z");
+});
+
+test("valida CNAE e telefone com DDD", () => {
+  assert.equal(isValidCnae("69.20-6-01 - Atividades de contabilidade"), true);
+  assert.equal(isValidCnae("6920601"), true);
+  assert.equal(isValidCnae("69206"), false);
+  assert.equal(isValidPhone("(11) 3333-4444"), true);
+  assert.equal(isValidPhone("3333-4444"), false);
 });

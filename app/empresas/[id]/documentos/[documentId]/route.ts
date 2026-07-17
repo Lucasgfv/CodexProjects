@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string; documentId: string }> }) {
+  const user = await getCurrentUser();
+  if (!user || user.deveTrocarSenha) return new Response("Acesso não autorizado.", { status: 401 });
   const { id, documentId } = await params;
-  const document = await prisma.documentoEmpresa.findFirst({ where: { id: documentId, empresaId: id } });
+  const document = await prisma.documentoEmpresa.findFirst({ where: { id: documentId, empresaId: id, removidoEm: null } });
   if (!document) return new Response("Documento não encontrado.", { status: 404 });
 
   const safeName = document.nomeArquivo.replace(/[\r\n"]/g, "_");

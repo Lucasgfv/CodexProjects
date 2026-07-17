@@ -29,13 +29,14 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
     payload.set("cartaoCnpj", file);
     try {
       const response = await fetch("/api/cnpj/cartao", { method: "POST", body: payload });
-      const result = await response.json() as { data?: Record<string, string>; message?: string };
+      const result = await response.json() as { data?: Record<string, string>; message?: string; source?: "TEXT" | "OCR"; confidence?: number };
       if (!response.ok || !result.data) throw new Error(result.message || "Não foi possível importar o PDF.");
       for (const [name, importedValue] of Object.entries(result.data)) {
         const control = formRef.current.elements.namedItem(name);
         if ((control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement) && !control.value.trim()) control.value = importedValue;
       }
-      setImportStatus({ loading: false, message: result.message });
+      const confidence = result.source === "OCR" && typeof result.confidence === "number" ? ` Confiança estimada: ${result.confidence}%.` : "";
+      setImportStatus({ loading: false, message: `${result.message ?? "Dados importados."}${confidence}` });
     } catch (error) {
       setImportStatus({ loading: false, error: true, message: error instanceof Error ? error.message : "Não foi possível importar o PDF." });
     }
@@ -56,9 +57,9 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
     {state.status === "error" && <div className="form-alert error" role="alert">{state.message}</div>}
 
     <section className="import-card" aria-labelledby="import-title">
-      <div><FileUp size={22} /><div><h2 id="import-title">Importar Cartão CNPJ</h2><p>Selecione o PDF original da Receita Federal. Os dados reconhecidos preencherão apenas campos vazios.</p></div></div>
-      <label className="button secondary file-button" htmlFor="cartaoCnpj">Selecionar PDF</label>
-      <input className="sr-only" id="cartaoCnpj" name="cartaoCnpj" type="file" accept="application/pdf,.pdf" onChange={(event) => importCard(event.target.files?.[0])} />
+      <div><FileUp size={22} /><div><h2 id="import-title">Importar Cartão CNPJ</h2><p>Envie PDF, JPG ou PNG. PDFs textuais são lidos diretamente; documentos digitalizados usam OCR local e sempre exigem revisão.</p></div></div>
+      <label className="button secondary file-button" htmlFor="cartaoCnpj">Selecionar arquivo</label>
+      <input className="sr-only" id="cartaoCnpj" name="cartaoCnpj" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(event) => importCard(event.target.files?.[0])} />
       {importStatus.message && <p className={`import-message ${importStatus.error ? "error-text" : ""}`} aria-live="polite">{importStatus.loading && <LoaderCircle className="spin" size={15} />}{importStatus.message}</p>}
     </section>
 
@@ -86,14 +87,14 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
       <div className="field"><label htmlFor="uf">UF *</label><input id="uf" name="uf" required maxLength={2} autoCapitalize="characters" defaultValue={value(company, "uf")} {...errorProps("uf")} /><ErrorMessage state={state} name="uf" /></div>
       <div className="field"><label htmlFor="pontoReferencia">Ponto de referência</label><input id="pontoReferencia" name="pontoReferencia" defaultValue={value(company, "pontoReferencia")} /></div>
       <div className="field span-6"><label htmlFor="email">E-mail principal</label><input id="email" type="email" name="email" defaultValue={value(company, "email")} {...errorProps("email")} /><ErrorMessage state={state} name="email" /></div>
-      <div className="field"><label htmlFor="telefone1">Telefone principal</label><input id="telefone1" name="telefone1" inputMode="tel" defaultValue={value(company, "telefone1")} /></div>
-      <div className="field"><label htmlFor="telefone2">Telefone alternativo</label><input id="telefone2" name="telefone2" inputMode="tel" defaultValue={value(company, "telefone2")} /></div>
+      <div className="field"><label htmlFor="telefone1">Telefone principal</label><input id="telefone1" name="telefone1" inputMode="tel" defaultValue={value(company, "telefone1")} {...errorProps("telefone1")} /><ErrorMessage state={state} name="telefone1" /></div>
+      <div className="field"><label htmlFor="telefone2">Telefone alternativo</label><input id="telefone2" name="telefone2" inputMode="tel" defaultValue={value(company, "telefone2")} {...errorProps("telefone2")} /><ErrorMessage state={state} name="telefone2" /></div>
     </div></section>
 
     <section className="form-section"><h2 className="section-title">Atividade e quadro operacional</h2><div className="form-grid">
       <div className="field"><label htmlFor="capitalSocial">Capital social</label><input id="capitalSocial" inputMode="decimal" name="capitalSocial" placeholder="0,00" defaultValue={value(company, "capitalSocial")} {...errorProps("capitalSocial")} /><ErrorMessage state={state} name="capitalSocial" /></div>
       <div className="field span-8"><label htmlFor="cnaePrincipal">CNAE principal *</label><input id="cnaePrincipal" name="cnaePrincipal" required defaultValue={value(company, "cnaePrincipal")} {...errorProps("cnaePrincipal")} /><ErrorMessage state={state} name="cnaePrincipal" /></div>
-      <div className="field span-6"><label htmlFor="cnaesSecundarios">CNAEs secundários (um por linha)</label><textarea id="cnaesSecundarios" name="cnaesSecundarios" defaultValue={Array.isArray(company?.cnaesSecundarios) ? company.cnaesSecundarios.join("\n") : ""} /></div>
+      <div className="field span-6"><label htmlFor="cnaesSecundarios">CNAEs secundários (um por linha)</label><textarea id="cnaesSecundarios" name="cnaesSecundarios" defaultValue={Array.isArray(company?.cnaesSecundarios) ? company.cnaesSecundarios.join("\n") : ""} {...errorProps("cnaesSecundarios")} /><ErrorMessage state={state} name="cnaesSecundarios" /></div>
       <div className="field span-6"><label htmlFor="ramoAtividade">Ramo de atividade *</label><input id="ramoAtividade" name="ramoAtividade" required defaultValue={value(company, "ramoAtividade")} {...errorProps("ramoAtividade")} /><ErrorMessage state={state} name="ramoAtividade" /></div>
       <div className="field span-6"><label htmlFor="servicoProduto">Serviço ou produto *</label><input id="servicoProduto" name="servicoProduto" required defaultValue={value(company, "servicoProduto")} {...errorProps("servicoProduto")} /><ErrorMessage state={state} name="servicoProduto" /></div>
       <div className="field"><label htmlFor="quantidadeFuncionarios">Quantidade de funcionários</label><input id="quantidadeFuncionarios" type="number" min="0" name="quantidadeFuncionarios" defaultValue={value(company, "quantidadeFuncionarios") || "0"} {...errorProps("quantidadeFuncionarios")} /><ErrorMessage state={state} name="quantidadeFuncionarios" /></div>
@@ -101,18 +102,17 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
     </div></section>
 
     <section className="form-section"><h2 className="section-title">Relacionamento com o escritório</h2><div className="form-grid">
-      <div className="field"><label htmlFor="tipoCliente">Tipo de cliente</label><select id="tipoCliente" name="tipoCliente" defaultValue={value(company, "tipoCliente") || "PRINCIPAL"}><option value="PRINCIPAL">Principal</option><option value="SECUNDARIO">Secundário</option><option value="PROSPECT">Prospect</option><option value="INATIVO">Inativo</option></select></div>
+      <div className="field"><label htmlFor="tipoCliente">Tipo de cliente</label><select id="tipoCliente" name="tipoCliente" defaultValue={value(company, "tipoCliente") === "INATIVO" ? "PRINCIPAL" : value(company, "tipoCliente") || "PRINCIPAL"} {...errorProps("tipoCliente")}><option value="PRINCIPAL">Principal</option><option value="SECUNDARIO">Secundário</option><option value="PROSPECT">Prospect</option></select><ErrorMessage state={state} name="tipoCliente" /></div>
       <div className="field"><label htmlFor="dataEntrada">Entrada no escritório *</label><input id="dataEntrada" type="date" name="dataEntrada" required defaultValue={iso(company, "dataEntrada")} {...errorProps("dataEntrada")} /><ErrorMessage state={state} name="dataEntrada" /></div>
       <div className="field"><label htmlFor="responsavelInterno">Responsável interno</label><input id="responsavelInterno" name="responsavelInterno" defaultValue={value(company, "responsavelInterno")} /></div>
       <div className="field span-6"><label htmlFor="responsavelAnterior">Contabilidade anterior</label><input id="responsavelAnterior" name="responsavelAnterior" defaultValue={value(company, "responsavelAnterior")} /></div>
-      <div className="field"><label htmlFor="dataSaidaEscritorio">Saída do escritório</label><input id="dataSaidaEscritorio" type="date" name="dataSaidaEscritorio" defaultValue={iso(company, "dataSaidaEscritorio")} {...errorProps("dataSaidaEscritorio")} /><ErrorMessage state={state} name="dataSaidaEscritorio" /></div>
-      <div className="field span-6"><label htmlFor="motivoSaidaEscritorio">Motivo da saída</label><input id="motivoSaidaEscritorio" name="motivoSaidaEscritorio" defaultValue={value(company, "motivoSaidaEscritorio")} /></div>
+      <div className="field span-12"><p className="security-note">A saída do escritório é controlada pela inativação na central da empresa, preservando o histórico e a auditoria.</p></div>
     </div></section>
 
     <section className="form-section"><h2 className="section-title">Fiscal e acompanhamento</h2><div className="form-grid">
-      <div className="field"><label htmlFor="situacaoAlvaras">Situação dos alvarás</label><select id="situacaoAlvaras" name="situacaoAlvaras" defaultValue={value(company, "situacaoAlvaras") || "PENDENTE"}><option value="PRONTO">Pronto</option><option value="EM_ANDAMENTO">Em andamento</option><option value="PENDENTE">Pendente</option><option value="NAO_APLICAVEL">Não aplicável</option></select></div>
-      <div className="field"><label htmlFor="regimeTributario">Regime tributário</label><select id="regimeTributario" name="regimeTributario" defaultValue={value(company, "regimeTributario") || "SIMPLES_NACIONAL"}><option value="SIMPLES_NACIONAL">Simples Nacional</option><option value="LUCRO_PRESUMIDO">Lucro Presumido</option><option value="LUCRO_REAL">Lucro Real</option><option value="MEI">MEI</option><option value="ISENTO">Isento</option></select></div>
-      <div className="field"><label htmlFor="ranking">Ranking</label><select id="ranking" name="ranking" defaultValue={value(company, "ranking") || "C"}>{["C", "B", "A", "S", "SS"].map((rank) => <option key={rank}>{rank}</option>)}</select></div>
+      <div className="field"><label htmlFor="situacaoAlvaras">Situação dos alvarás</label><select id="situacaoAlvaras" name="situacaoAlvaras" defaultValue={value(company, "situacaoAlvaras") || "PENDENTE"} {...errorProps("situacaoAlvaras")}><option value="PRONTO">Pronto</option><option value="EM_ANDAMENTO">Em andamento</option><option value="PENDENTE">Pendente</option><option value="NAO_APLICAVEL">Não aplicável</option></select><ErrorMessage state={state} name="situacaoAlvaras" /></div>
+      <div className="field"><label htmlFor="regimeTributario">Regime tributário</label><select id="regimeTributario" name="regimeTributario" defaultValue={value(company, "regimeTributario") || "SIMPLES_NACIONAL"} {...errorProps("regimeTributario")}><option value="SIMPLES_NACIONAL">Simples Nacional</option><option value="LUCRO_PRESUMIDO">Lucro Presumido</option><option value="LUCRO_REAL">Lucro Real</option><option value="MEI">MEI</option><option value="ISENTO">Isento</option></select><ErrorMessage state={state} name="regimeTributario" /></div>
+      <div className="field"><label htmlFor="ranking">Ranking</label><select id="ranking" name="ranking" defaultValue={value(company, "ranking") || "C"} {...errorProps("ranking")}>{["C", "B", "A", "S", "SS"].map((rank) => <option key={rank}>{rank}</option>)}</select><ErrorMessage state={state} name="ranking" /></div>
       <div className="field"><label htmlFor="dataBaixa">Data da baixa</label><input id="dataBaixa" type="date" name="dataBaixa" defaultValue={iso(company, "dataBaixa")} {...errorProps("dataBaixa")} /><ErrorMessage state={state} name="dataBaixa" /></div>
       <div className="field"><label htmlFor="dataAtualizacaoBancaria">Atualização bancária</label><input id="dataAtualizacaoBancaria" type="date" name="dataAtualizacaoBancaria" defaultValue={iso(company, "dataAtualizacaoBancaria")} {...errorProps("dataAtualizacaoBancaria")} /><ErrorMessage state={state} name="dataAtualizacaoBancaria" /></div>
       <label className="check-field"><input type="checkbox" name="participaLicitacoes" defaultChecked={Boolean(company?.participaLicitacoes)} /> Participa de licitações</label>

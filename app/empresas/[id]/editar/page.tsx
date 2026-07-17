@@ -1,5 +1,6 @@
 import { updateEmpresa } from "@/app/actions";
 import { CompanyForm } from "@/components/company-form";
+import { requirePageUser } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,6 +8,7 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function EditarEmpresa({ params }: { params: Promise<{ id: string }> }) {
+  await requirePageUser(["ADMIN", "OPERADOR"]);
   const { id } = await params;
   const company = await prisma.empresa.findUnique({ where: { id } });
   if (!company) notFound();

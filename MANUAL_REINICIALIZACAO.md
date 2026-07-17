@@ -1,29 +1,37 @@
 # Manual de inicialização, reinicialização e recuperação
 
-Este manual cobre o AutCompany em ambiente local e com Docker. Execute os comandos na raiz do repositório.
+Este manual cobre desenvolvimento local, Docker e a preparação operacional do AutCompany. Execute os comandos na raiz do repositório.
 
-> No Windows, se o PowerShell bloquear `pnpm.ps1` pela política de execução, use `pnpm.cmd` nos mesmos comandos (por exemplo, `pnpm.cmd dev`). Não reduza a segurança global do PowerShell apenas para contornar esse aviso.
+> No Windows, se o PowerShell bloquear `pnpm.ps1`, use `pnpm.cmd`. Não reduza a política de segurança global apenas para contornar esse aviso.
 
-## Primeira inicialização com Docker (recomendado)
+## Primeira inicialização com Docker
 
-Pré-requisitos: Docker Desktop ativo e portas `3000`, `5050` e `5432` livres.
+Pré-requisitos: Docker Desktop ativo e portas locais `3000`, `5050` e `5432` livres.
 
 ```powershell
+Copy-Item .env.example .env
 docker compose up --build -d
 docker compose ps
+docker compose logs --tail 100 migrate app db
 ```
+
+O container `migrate` deve terminar com código `0`. Ele executa `prisma migrate deploy`; a aplicação só inicia depois disso. Se a migração falhar, não use `db push` para contornar o erro: interrompa o uso e analise a migração e o backup.
 
 - Sistema: `http://localhost:3000`
 - pgAdmin: `http://localhost:5050`
-- PostgreSQL no computador: `localhost:5432`
+- PostgreSQL no próprio computador: `localhost:5432`
 
-Para acompanhar a inicialização:
+Essas portas ficam vinculadas a `127.0.0.1` e não devem ser publicadas na rede.
+
+## Criar o primeiro administrador
+
+O comando recusa a criação quando já existe um administrador. A senha não deve ser colocada em código, documentação ou histórico do terminal.
 
 ```powershell
-docker compose logs -f app db
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-admin.ps1 -Email admin@dominio.local -Name "Administrador"
 ```
 
-Use `Ctrl+C` para sair dos logs; os containers continuam ativos.
+No primeiro login, a troca da senha é obrigatória. Depois disso, novos usuários são criados por um administrador em `/usuarios`.
 
 ## Reinicialização diária com Docker
 
@@ -34,11 +42,11 @@ docker compose restart
 docker compose ps
 ```
 
-Se os containers estavam parados, use `docker compose up -d`. Depois de alterar dependências, Dockerfile, Prisma ou configuração:
+Se os containers estiverem parados, use `docker compose up -d`. Após mudanças de dependências, Dockerfile, Prisma ou configuração:
 
 ```powershell
 docker compose up --build -d
-docker compose logs --tail 100 app db
+docker compose logs --tail 150 migrate app db
 ```
 
 Para parar preservando o banco:
@@ -47,41 +55,106 @@ Para parar preservando o banco:
 docker compose down
 ```
 
-**Não acrescente `-v`.** `docker compose down -v` remove volumes e pode apagar todos os dados do PostgreSQL e do pgAdmin.
+Nunca acrescente `-v`: isso remove volumes e pode apagar o PostgreSQL e o pgAdmin.
 
-## Inicialização local
+## Inicialização local sem Docker para a aplicação
 
 Pré-requisitos: Node.js 22, pnpm e PostgreSQL acessível.
 
-1. Crie `.env` a partir de `.env.example` e ajuste `DATABASE_URL`.
-2. Prepare e inicie:
-
 ```powershell
-pnpm install
-pnpm exec prisma generate
-pnpm db:push
+Copy-Item .env.example .env
+pnpm install --frozen-lockfile
+pnpm db:deploy
 pnpm dev
 ```
 
-Abra `http://localhost:3000`. Para encerrar, pressione `Ctrl+C`.
-
-Opcionalmente, em banco de desenvolvimento vazio, carregue a demonstração com `pnpm db:seed`.
-
-## Reinicialização local
-
-Pare com `Ctrl+C` e execute `pnpm dev`. Se o schema Prisma mudou:
+Abra `http://localhost:3000`. Em banco novo de desenvolvimento, o seed é opcional:
 
 ```powershell
-pnpm exec prisma generate
-pnpm db:migrate
-pnpm dev
+pnpm db:seed
 ```
 
-Em banco local descartável, `pnpm db:push` pode substituir a migração. Com dados importantes, prefira migração versionada e backup prévio.
+Não use `db:push` no fluxo normal. Mudanças versionadas do schema exigem nova migração; ambientes que apenas recebem a aplicação usam `pnpm db:deploy`.
 
-## Limpar apenas o cache da aplicação
+## Backup diário e semanal
 
-Pare a aplicação antes. Este procedimento preserva o banco:
+Defina um destino externo disponível, como NAS ou outro computador:
+
+```powershell
+$env:AUTCOMPANY_BACKUP_EXTERNAL = "D:\BackupsExternos\AutCompany"
+powershell -ExecutionPolicy Bypass -File .\scripts\backup.ps1
+```
+
+O script:
+
+1. gera dump PostgreSQL no formato custom;
+2. copia para `backups/daily`;
+3. cria checksum SHA256;
+4. cria cópia semanal aos domingos;
+5. mantém 30 diários e 12 semanais, local e externamente;
+6. falha de forma visível se o destino externo não estiver configurado ou disponível.
+
+Para o compose de produção, informe também o arquivo e o usuário:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\backup.ps1 -ComposeFile compose.production.yml -DatabaseUser autcompany
+```
+
+Agende o comando no sistema operacional e monitore o código de saída. Um arquivo existente não substitui uma restauração de teste.
+
+## Validar uma restauração
+
+O script confere o checksum quando houver arquivo `.sha256`, cria um banco temporário com prefixo controlado, restaura, consulta as contagens essenciais e remove somente esse banco temporário:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-backup.ps1 -BackupPath .\backups\daily\autcompany_AAAAMMDD_HHMMSS.dump
+```
+
+Produção:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-backup.ps1 -BackupPath D:\BackupsExternos\AutCompany\daily\arquivo.dump -ComposeFile compose.production.yml -DatabaseUser autcompany
+```
+
+Nunca restaure diretamente sobre o banco principal durante uma verificação.
+
+## Produção interna com HTTPS
+
+1. Copie `.env.production.example` para um arquivo de ambiente não versionado.
+2. Gere `POSTGRES_PASSWORD` e `AUTH_SECRET` exclusivos.
+3. Em `DATABASE_URL`, codifique caracteres especiais da senha para URL e use o host `db`.
+4. Defina `AUTCOMPANY_HOST` para o nome interno resolvido na rede.
+5. Inicie:
+
+```powershell
+docker compose --env-file .env.production -f compose.production.yml up --build -d
+docker compose --env-file .env.production -f compose.production.yml ps
+```
+
+O PostgreSQL não publica porta e o pgAdmin não faz parte do compose de produção. O Caddy fornece HTTPS interno. Antes de cadastrar credenciais ou dados reais, instale/confie a autoridade local do Caddy nos computadores autorizados e confirme que o navegador não apresenta alerta de certificado.
+
+## Diagnóstico rápido
+
+Aplicação ou migração:
+
+```powershell
+docker compose ps
+docker compose logs --tail 150 migrate app
+pnpm db:status
+```
+
+Banco:
+
+```powershell
+docker compose ps db
+docker compose logs --tail 150 db
+```
+
+No Docker, o host do banco é `db`; fora dele, normalmente é `localhost`. Nunca copie valores reais de `.env` para diagnóstico, issue ou mensagem.
+
+## Limpar somente o cache da aplicação
+
+Pare a aplicação e remova apenas `.next`:
 
 ```powershell
 Remove-Item -Recurse -Force .next
@@ -89,71 +162,23 @@ pnpm exec prisma generate
 pnpm dev
 ```
 
-Com Docker, use:
-
-```powershell
-docker compose down
-docker compose up --build -d
-```
-
-## Diagnóstico rápido
-
-Se o sistema não abrir:
-
-```powershell
-docker compose ps
-docker compose logs --tail 150 app
-Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue
-```
-
-Se o banco não conectar:
-
-```powershell
-docker compose ps db
-docker compose logs --tail 150 db
-```
-
-Confirme que o container `db` está saudável. No Docker, a aplicação usa o host `db`; na execução local, `.env` normalmente usa `localhost`. Confira também se outro PostgreSQL ocupa a porta `5432`.
-
-Se o Prisma Client estiver ausente ou antigo:
-
-```powershell
-pnpm exec prisma generate
-```
-
-Se houver problema com dependências, tente primeiro:
-
-```powershell
-pnpm install --frozen-lockfile
-pnpm exec prisma generate
-pnpm build
-```
-
-Não apague o lockfile para “resolver” o problema, pois isso atualiza dependências e esconde a causa.
+Esse procedimento não toca no PostgreSQL.
 
 ## Verificação de saúde
 
 ```powershell
+pnpm test
+pnpm test:ocr
 pnpm exec tsc --noEmit
 pnpm build
+pnpm db:status
 ```
 
-Ainda não há testes automatizados configurados. Faça também o checklist manual do `AGENTS.md`.
-
-## Backup antes de manutenção de risco
-
-```powershell
-New-Item -ItemType Directory -Force backups
-docker compose exec -T db pg_dump -U postgres -d autcompany -Fc > backups\autcompany.backup
-```
-
-Confirme que o arquivo existe e tem tamanho maior que zero. `backups/` está ignorada pelo Git e deve continuar assim, principalmente com dados reais.
-
-Teste qualquer restauração primeiro em outro banco. Restaurar pode sobrescrever dados e não deve ser feito no banco principal sem backup e autorização.
+Há testes para CPF/CNPJ, CNAE, telefone, datas, senhas, papéis, limites de certificados, assinatura real de uploads e OCR em PDF textual, PDF digitalizado, imagem e entrada inválida. Ainda é necessário manter testes manuais do fluxo completo, das três contas reais e da impressão A4.
 
 ## Comandos perigosos
 
-Não execute em banco com dados importantes sem backup e autorização explícita:
+Não execute em banco com dados importantes:
 
 ```text
 docker compose down -v
@@ -161,15 +186,15 @@ pnpm exec prisma migrate reset
 DROP DATABASE
 ```
 
-Nunca copie `.env`, dumps ou dados de clientes para commits, tickets ou mensagens.
+Também não altere migrações já aplicadas. Crie uma migração aditiva e valide primeiro em cópia restaurada.
 
 ## Checklist após reiniciar
 
-1. Os serviços estão ativos, ou `pnpm dev` iniciou sem erro.
-2. A página inicial abre em `http://localhost:3000`.
-3. Uma empresa existente pode ser consultada.
-4. Os dados permaneceram após a reinicialização.
-5. Cadastro e edição funcionam, se o banco estiver configurado.
-6. A ficha continua correta na visualização de impressão.
-
-Se ainda houver falha, registre o comando, a mensagem completa, o serviço e as últimas linhas dos logs, removendo senhas e dados de clientes.
+1. `db` está saudável, `migrate` terminou com código `0` e `app` está ativo.
+2. `/login` abre e uma conta autorizada consegue entrar.
+3. O dashboard consulta o PostgreSQL sem dados demonstrativos falsos.
+4. Uma empresa existente, seus sócios e documentos continuam disponíveis.
+5. Admin, Operador e Visualizador respeitam a matriz de permissões.
+6. `/certificados` classifica corretamente os vencimentos.
+7. A ficha abre em desktop e celular e imprime em A4 sem navegação.
+8. O backup diário foi criado, copiado externamente e possui checksum.

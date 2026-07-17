@@ -88,6 +88,22 @@ enum TipoDocumentoEmpresa {
   OUTRO
 }
 
+enum PapelUsuario {
+  ADMIN
+  OPERADOR
+  VISUALIZADOR
+}
+
+enum StatusEmpresa {
+  ATIVA
+  INATIVA
+}
+
+enum OrigemAlteracao {
+  MANUAL
+  AUTOMATICA
+}
+
 model Empresa {
   id                        String               @id @default(cuid())
   razaoSocial               String
@@ -135,6 +151,9 @@ model Empresa {
   pendenciasFiscais         Boolean              @default(false)
   ranking                   Ranking              @default(C)
   observacoesInternas       String?
+  status                    StatusEmpresa        @default(ATIVA)
+  inativadaPor              Usuario?             @relation("EmpresaInativadaPor", fields: [inativadaPorId], references: [id], onDelete: SetNull)
+  inativadaPorId            String?
   socios                    EmpresaSocio[]
   vinculosRecebidos         SocioVinculo[]       @relation("EmpresaDestino")
   contatos                  ContatoEmpresa[]
@@ -146,6 +165,8 @@ model Empresa {
 
   @@index([razaoSocial])
   @@index([nomeFantasia])
+  @@index([status, dataEntrada])
+  @@index([inativadaPorId])
 }
 
 model Socio {
@@ -171,6 +192,8 @@ model EmpresaSocio {
   administrador Boolean   @default(false)
   dataEntrada   DateTime?
   dataSaida     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
 
   @@id([empresaId, socioId])
 }
@@ -187,10 +210,13 @@ model ContatoEmpresa {
   email       String?
   principal   Boolean            @default(false)
   observacoes String?
+  ativo       Boolean            @default(true)
+  inativadoEm DateTime?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
   @@index([empresaId])
+  @@index([empresaId, ativo])
 }
 
 model CertificadoDigital {
@@ -198,19 +224,21 @@ model CertificadoDigital {
   empresa          Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   empresaId        String
   titularTipo      TitularCertificado
-  titularNome      String
-  titularDocumento String
-  tipo             TipoCertificado
+  titularNome      String?
+  titularDocumento String?
+  tipo             TipoCertificado?
   emissora         String?
   dataEmissao      DateTime?
   dataVencimento   DateTime
   revogadoEm       DateTime?
+  removidoEm       DateTime?
   observacoes      String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
   @@index([empresaId, dataVencimento])
   @@index([titularDocumento])
+  @@index([dataVencimento, removidoEm])
 }
 
 model AlteracaoEmpresa {
@@ -221,9 +249,13 @@ model AlteracaoEmpresa {
   tipo        TipoAlteracaoEmpresa
   descricao   String
   observacoes String?
+  origem      OrigemAlteracao      @default(MANUAL)
+  usuario     Usuario?             @relation("AlteracaoAutor", fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuarioId   String?
   createdAt   DateTime             @default(now())
 
   @@index([empresaId, data])
+  @@index([usuarioId, createdAt])
 }
 
 model DocumentoEmpresa {
@@ -236,9 +268,11 @@ model DocumentoEmpresa {
   tamanho     Int
   conteudo    Bytes
   observacoes String?
+  removidoEm  DateTime?
   createdAt   DateTime             @default(now())
 
   @@index([empresaId, tipo])
+  @@index([empresaId, removidoEm])
 }
 
 model SocioVinculo {
@@ -249,8 +283,43 @@ model SocioVinculo {
   descricao        String
   empresaDestino   Empresa?    @relation("EmpresaDestino", fields: [empresaDestinoId], references: [id], onDelete: SetNull)
   empresaDestinoId String?
+  ativo            Boolean     @default(true)
   createdAt        DateTime    @default(now())
 
   @@index([socioId])
   @@index([empresaDestinoId])
+}
+
+model Usuario {
+  id                 String             @id @default(cuid())
+  nome               String
+  email              String             @unique
+  senhaHash          String
+  papel              PapelUsuario       @default(VISUALIZADOR)
+  ativo              Boolean            @default(true)
+  deveTrocarSenha    Boolean            @default(true)
+  tentativasFalhas   Int                @default(0)
+  bloqueadoAte       DateTime?
+  ultimoAcessoEm     DateTime?
+  empresasInativadas Empresa[]          @relation("EmpresaInativadaPor")
+  alteracoes         AlteracaoEmpresa[] @relation("AlteracaoAutor")
+  auditorias         Auditoria[]        @relation("AuditoriaUsuario")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([ativo, papel])
+}
+
+model Auditoria {
+  id         String   @id @default(cuid())
+  usuario    Usuario? @relation("AuditoriaUsuario", fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuarioId  String?
+  entidade   String
+  entidadeId String
+  acao       String
+  alteracoes Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entidade, entidadeId, createdAt])
+  @@index([usuarioId, createdAt])
 }

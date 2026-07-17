@@ -4,6 +4,7 @@ allowBuilds:
   esbuild: true
   prisma: true
   sharp: true
+  tesseract.js: true
 packages:
   - "."
 
@@ -13,3 +14,4 @@ onlyBuiltDependencies:
   - esbuild
   - prisma
   - sharp
+  - tesseract.js
