@@ -82,7 +82,7 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
-O projeto ainda não possui suíte de testes automatizados. Ao implementar lógica relevante, adicione testes apropriados e cubra principalmente normalização, validação, ações de cadastro/edição e regras do banco.
+O projeto possui testes automatizados iniciais para normalização, validação, senhas, permissões, certificados, uploads e OCR, mas ainda não uma suíte completa de integração e ponta a ponta. Ao implementar lógica relevante, amplie a cobertura, principalmente para ações de cadastro/edição, autenticação, transações e regras do banco.
 
 O script `pnpm lint` só deve ser usado depois de confirmar que está configurado e compatível com a versão atual do Next.js. Se estiver quebrado por configuração, corrija-o em uma tarefa própria e documente o comando válido.
 

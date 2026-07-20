@@ -17,7 +17,9 @@ docker compose logs --tail 100 migrate app db
 
 O container `migrate` deve terminar com código `0`. Ele executa `prisma migrate deploy`; a aplicação só inicia depois disso. Se a migração falhar, não use `db push` para contornar o erro: interrompa o uso e analise a migração e o backup.
 
-- Sistema: `http://localhost:3000`
+No ambiente de desenvolvimento em Docker, a aplicação mantém `.next` em um volume Linux separado e remove somente esse cache antes de iniciar. Isso evita misturar manifestos gerados no Windows com os do container, situação que pode provocar a mensagem `missing required error components, refreshing...`; o PostgreSQL e seus volumes não são tocados. Aguarde o log indicar que o Next.js está pronto antes do primeiro acesso.
+
+- Sistema: `http://127.0.0.1:3000`
 - pgAdmin: `http://localhost:5050`
 - PostgreSQL no próprio computador: `localhost:5432`
 
@@ -68,7 +70,7 @@ pnpm db:deploy
 pnpm dev
 ```
 
-Abra `http://localhost:3000`. Em banco novo de desenvolvimento, o seed é opcional:
+Abra `http://127.0.0.1:3000`. Em banco novo de desenvolvimento, o seed é opcional:
 
 ```powershell
 pnpm db:seed
@@ -163,6 +165,8 @@ pnpm dev
 ```
 
 Esse procedimento não toca no PostgreSQL.
+
+Se o erro aparecer após trocar `AUTH_SECRET`, limpe os cookies e dados do site de `localhost` e `127.0.0.1` no navegador e entre novamente. Sessões criadas com o segredo anterior não podem ser descriptografadas pelo novo ambiente. No desenvolvimento Docker, use o endereço canônico `http://127.0.0.1:3000`, configurado também em `AUTH_URL`, para evitar redirecionamentos para `0.0.0.0`.
 
 ## Verificação de saúde
 

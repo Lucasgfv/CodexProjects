@@ -29,7 +29,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const COMPANY_AUDIT_FIELDS = [
   "razaoSocial", "nomeFantasia", "cnpj", "inscricaoEstadual", "inscricaoMunicipal", "dataAbertura", "naturezaJuridica", "porte", "nire", "situacaoCadastral", "dataSituacaoCadastral",
   "endereco", "numero", "complemento", "bairro", "cidade", "uf", "cep", "pontoReferencia", "email", "telefone1", "telefone2", "capitalSocial", "cnaePrincipal", "cnaesSecundarios",
-  "ramoAtividade", "servicoProduto", "quantidadeFuncionarios", "tempoEmpresa", "dataEntrada", "dataSaidaEscritorio", "motivoSaidaEscritorio", "responsavelInterno", "responsavelAnterior",
+  "ramoAtividade", "servicoProduto", "quantidadeFuncionarios", "dataEntrada", "dataSaidaEscritorio", "motivoSaidaEscritorio", "responsavelInterno", "responsavelAnterior",
   "situacaoAlvaras", "participaLicitacoes", "tipoCliente", "regimeTributario", "dataBaixa", "irpfSociosNaContabilidade", "dataAtualizacaoBancaria", "pendenciasFiscais", "ranking", "observacoesInternas",
 ];
 

@@ -254,7 +254,23 @@ tr:last-child td { border-bottom: 0; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .hero-row, .panel-head { align-items: stretch; flex-direction: column; }
   .field, .field.span-6, .field.span-8 { grid-column: span 12; }
-  .sheet { transform-origin: top left; }
+  .print-toolbar { width: calc(100% - 24px); gap: 12px; }
+  .print-toolbar .back { margin-bottom: 0; }
+  .sheet { width: calc(100% - 24px); min-height: 0; margin-bottom: 24px; padding: 12px; }
+  .sheet-header { grid-template-columns: 1fr; height: auto; }
+  .sheet-logo { min-height: 72px; border-right: 0; border-bottom: .65mm solid #111; }
+  .sheet-title { min-height: 58px; padding: 8px; font-size: clamp(18pt, 9vw, 25pt); text-align: center; }
+  .g-2, .g-3, .g-4, .company-row { grid-template-columns: 1fr; }
+  .grid .cell, .company-row > *:first-child { border-right: 0; }
+  .partners-head { display: none; }
+  .partner { grid-template-columns: 1fr; }
+  .partner > div { border-right: 0; border-bottom: .35mm solid #111; }
+  .partner > div:last-child { border-bottom: 0; text-align: left; }
+  .sheet-list-row, .sheet-history > div { grid-template-columns: 1fr; gap: 4px; }
+  .workflow { position: static; margin-top: 12px; }
+  .workflow-grid { grid-template-columns: 1fr; }
+  .workflow-item { border-right: 0; border-bottom: .35mm solid #111; }
+  .workflow-item:last-child { border-bottom: 0; }
   .topbar { padding: 0 4vw; }
   .import-card { grid-template-columns: 1fr; }
   .import-card .button { justify-self: start; }

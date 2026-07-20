@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isValidCnae, isValidCnpj, isValidCpf, isValidPhone, normalizeCnpj, parseDate } from "../lib/company-validation";
+import { isValidCnae, isValidCnpj, isValidCpf, isValidPhone, normalizeCnpj, parseDate, validateCompanyForm } from "../lib/company-validation";
 
 test("normaliza e valida CNPJ numérico", () => {
   assert.equal(normalizeCnpj("11.222.333/0001-81"), "11222333000181");
@@ -29,4 +29,37 @@ test("valida CNAE e telefone com DDD", () => {
   assert.equal(isValidCnae("69206"), false);
   assert.equal(isValidPhone("(11) 3333-4444"), true);
   assert.equal(isValidPhone("3333-4444"), false);
+});
+
+test("aceita CNAEs secundários livres e os novos tipos de cliente", () => {
+  for (const tipoCliente of ["FIXO", "AVULSO", "IRPF"]) {
+    const form = new FormData();
+    Object.entries({
+      razaoSocial: "Empresa Teste Ltda",
+      nomeFantasia: "Empresa Teste",
+      cnpj: "11.222.333/0001-81",
+      endereco: "Rua Teste",
+      cidade: "São Paulo",
+      uf: "SP",
+      cnaePrincipal: "69.20-6-01 - Atividades de contabilidade",
+      cnaesSecundarios: "Atividade secundária informada livremente, com vírgula\nComércio varejista",
+      ramoAtividade: "Serviços",
+      servicoProduto: "Contabilidade",
+      dataEntrada: "2026-07-20",
+      situacaoAlvaras: "PENDENTE",
+      tipoCliente,
+      regimeTributario: "SIMPLES_NACIONAL",
+      ranking: "C",
+    }).forEach(([key, value]) => form.set(key, value));
+
+    const result = validateCompanyForm(form);
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.data.cnaesSecundarios, [
+        "Atividade secundária informada livremente, com vírgula",
+        "Comércio varejista",
+      ]);
+      assert.equal(result.data.tipoCliente, tipoCliente);
+    }
+  }
 });

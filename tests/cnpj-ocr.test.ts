@@ -1,7 +1,11 @@
 import { extractCnpjCard, ocrReviewWarning } from "../lib/cnpj-ocr";
-import { createCanvas, loadImage, PDFDocument } from "@napi-rs/canvas";
+import { createCanvas, GlobalFonts, loadImage, PDFDocument } from "@napi-rs/canvas";
 import assert from "node:assert/strict";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const fontPath = fileURLToPath(new URL("../node_modules/pdfjs-dist/standard_fonts/LiberationSans-Regular.ttf", import.meta.url));
+if (!GlobalFonts.registerFromPath(fontPath, "Liberation Sans")) throw new Error("Não foi possível registrar a fonte dos testes de OCR.");
 
 const lines = [
   "NÚMERO DE INSCRIÇÃO 11.222.333/0001-81",
@@ -17,7 +21,7 @@ async function cardImage() {
   context.fillStyle = "white";
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "black";
-  context.font = "32px Arial";
+  context.font = "32px Liberation Sans";
   lines.forEach((line, index) => context.fillText(line, 60, 100 + index * 120));
   return new Uint8Array(await canvas.encode("png"));
 }
@@ -34,7 +38,7 @@ test("reconhece cartão CNPJ em imagem e exige revisão por OCR", { timeout: 60_
 test("lê PDF textual sem OCR", { timeout: 60_000 }, async () => {
   const pdf = new PDFDocument();
   const context = pdf.beginPage(1800, 1000);
-  context.font = "32px Arial";
+  context.font = "32px Liberation Sans";
   lines.forEach((line, index) => context.fillText(line, 60, 100 + index * 120));
   pdf.endPage();
   const result = await extractCnpjCard(new Uint8Array(pdf.close()), "application/pdf", "cartao.pdf");

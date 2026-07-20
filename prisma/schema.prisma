@@ -15,10 +15,9 @@ enum SituacaoAlvara {
 }
 
 enum TipoCliente {
-  PRINCIPAL
-  SECUNDARIO
-  PROSPECT
-  INATIVO
+  FIXO
+  AVULSO
+  IRPF
 }
 
 enum RegimeTributario {
@@ -143,7 +142,7 @@ model Empresa {
   responsavelAnterior       String?
   situacaoAlvaras           SituacaoAlvara       @default(PENDENTE)
   participaLicitacoes       Boolean              @default(false)
-  tipoCliente               TipoCliente          @default(PRINCIPAL)
+  tipoCliente               TipoCliente          @default(FIXO)
   regimeTributario          RegimeTributario
   dataBaixa                 DateTime?
   irpfSociosNaContabilidade Boolean              @default(false)

@@ -51,7 +51,7 @@ O serviço `migrate` executa `prisma migrate deploy` antes da aplicação. O flu
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-admin.ps1 -Email admin@dominio.local -Name "Administrador"
 ```
 
-4. Abra `http://localhost:3000`, entre com a conta criada e troque a senha temporária.
+4. Abra `http://127.0.0.1:3000`, entre com a conta criada e troque a senha temporária.
 
 As portas de desenvolvimento são vinculadas somente a `127.0.0.1`: aplicação `3000`, PostgreSQL `5432` e pgAdmin `5050`.
 

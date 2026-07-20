@@ -5,7 +5,7 @@ const UFS = new Set([
 ]);
 
 const SITUACOES_ALVARA = new Set(["PRONTO", "EM_ANDAMENTO", "PENDENTE", "NAO_APLICAVEL"]);
-const TIPOS_CLIENTE = new Set(["PRINCIPAL", "SECUNDARIO", "PROSPECT"]);
+const TIPOS_CLIENTE = new Set(["FIXO", "AVULSO", "IRPF"]);
 const REGIMES = new Set(["SIMPLES_NACIONAL", "LUCRO_PRESUMIDO", "LUCRO_REAL", "MEI", "ISENTO"]);
 const RANKINGS = new Set(["C", "B", "A", "S", "SS"]);
 
@@ -70,7 +70,7 @@ function parseDecimal(value: string) {
 }
 
 function list(value: string) {
-  return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+  return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
 }
 
 export function isValidPhone(value: string) {
@@ -132,7 +132,6 @@ export function validateCompanyForm(form: FormData) {
   if (capitalRaw && parseDecimal(capitalRaw) === null) fieldErrors.capitalSocial = "Informe o capital com até duas casas decimais.";
   if (dataEntradaRaw && !parseDate(dataEntradaRaw)) fieldErrors.dataEntrada = "Informe uma data de entrada válida.";
   if (cnaePrincipalRaw && !isValidCnae(cnaePrincipalRaw)) fieldErrors.cnaePrincipal = "Informe um CNAE válido com 7 dígitos.";
-  if (cnaesSecundariosRaw.some((value) => !isValidCnae(value))) fieldErrors.cnaesSecundarios = "Revise os CNAEs secundários; use um código válido por linha.";
   if (!SITUACOES_ALVARA.has(situacaoAlvarasRaw)) fieldErrors.situacaoAlvaras = "Selecione uma situação de alvará válida.";
   if (!TIPOS_CLIENTE.has(tipoClienteRaw)) fieldErrors.tipoCliente = "Selecione um tipo de cliente válido.";
   if (!REGIMES.has(regimeTributarioRaw)) fieldErrors.regimeTributario = "Selecione um regime tributário válido.";
@@ -172,17 +171,16 @@ export function validateCompanyForm(form: FormData) {
       telefone2: digits(text(form, "telefone2")) || null,
       capitalSocial: capitalRaw ? parseDecimal(capitalRaw) : null,
       cnaePrincipal: normalizeCnae(cnaePrincipalRaw),
-      cnaesSecundarios: cnaesSecundariosRaw.map(normalizeCnae),
+      cnaesSecundarios: cnaesSecundariosRaw,
       ramoAtividade: text(form, "ramoAtividade"),
       servicoProduto: text(form, "servicoProduto"),
       quantidadeFuncionarios: parseNonNegativeInteger(quantidadeRaw) ?? 0,
-      tempoEmpresa: optionalText(form, "tempoEmpresa"),
       dataEntrada: parseDate(dataEntradaRaw)!,
       responsavelInterno: optionalText(form, "responsavelInterno"),
       responsavelAnterior: optionalText(form, "responsavelAnterior"),
       situacaoAlvaras: situacaoAlvarasRaw as "PRONTO" | "EM_ANDAMENTO" | "PENDENTE" | "NAO_APLICAVEL",
       participaLicitacoes: form.get("participaLicitacoes") === "on",
-      tipoCliente: tipoClienteRaw as "PRINCIPAL" | "SECUNDARIO" | "PROSPECT",
+      tipoCliente: tipoClienteRaw as "FIXO" | "AVULSO" | "IRPF",
       regimeTributario: regimeTributarioRaw as "SIMPLES_NACIONAL" | "LUCRO_PRESUMIDO" | "LUCRO_REAL" | "MEI" | "ISENTO",
       dataBaixa: parseDate(text(form, "dataBaixa")),
       irpfSociosNaContabilidade: form.get("irpfSociosNaContabilidade") === "on",

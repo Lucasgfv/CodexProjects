@@ -242,3 +242,186 @@ Cada entrada deve conter: pedido resumido, situação anterior, trabalho realiza
 
 **Estado:** Planejado, ainda não implementado.
 
+## Etapa 10 — 17/07/2026 — Backup e conciliação das migrações
+
+**Pedido resumido:** proteger os dados existentes, reconciliar o histórico do Prisma e retirar `prisma db push` da inicialização normal.
+
+**Situação anterior:** o banco local continha dados persistidos e duas migrações existentes no repositório não estavam registradas como aplicadas.
+
+**Trabalho realizado:**
+
+- criado o backup restaurável `backups/autcompany_pre_plano_20260717_141808.dump`, mantido fora do Git;
+- calculado o SHA-256 `3FD2A8FE9C0708C0F99A2CD59EC20CF63EEA885771F8F7B161F096B15D9E6657` e criado o arquivo lateral `.sha256`;
+- restaurado o dump em banco temporário, sem sobrescrever o banco principal;
+- comparados o banco restaurado e um banco vazio criado pelas migrações;
+- conciliadas as migrações existentes e adicionadas as migrações de fundação/segurança e auditoria imutável;
+- substituído o fluxo de inicialização por um serviço isolado que executa `prisma migrate deploy` antes da aplicação.
+
+**Superfícies afetadas:** PostgreSQL, `prisma/migrations`, Dockerfile, `compose.yml`, scripts de backup/restauração e documentação operacional.
+
+**Verificações registradas:** quatro migrações aplicadas; `prisma migrate status` limpo; restauração repetida em 20/07/2026 com 1 empresa, 1 sócio e 1 contato preservados.
+
+**Pendências identificadas:** configurar e executar a cópia externa real em NAS/outro computador e agendar a retenção operacional.
+
+**Commit:** `e914d78`.
+
+**Estado:** Validado localmente; cópia externa ainda pendente.
+
+## Etapa 11 — 17/07/2026 — Autenticação e matriz de permissões
+
+**Pedido resumido:** criar login sem cadastro público e separar os acessos de administrador, operador e visualizador.
+
+**Situação anterior:** páginas, ações e downloads podiam ser acessados sem autenticação centralizada.
+
+**Trabalho realizado:**
+
+- implementado Auth.js com e-mail, senha e sessão JWT de oito horas;
+- criados os papéis `ADMIN`, `OPERADOR` e `VISUALIZADOR`;
+- protegidas páginas, Server Actions e downloads no servidor;
+- criadas as rotas `/login`, `/usuarios` e `/alterar-senha`;
+- adicionados bloqueio por tentativas inválidas, bloqueio lógico de contas e troca obrigatória de senha temporária;
+- criado comando seguro para o primeiro administrador.
+
+**Superfícies afetadas:** autenticação, middleware, cabeçalho, páginas protegidas, usuários e autorização das Server Actions.
+
+**Verificações registradas:** testes automatizados de senha e permissões; em 20/07/2026, os três papéis foram autenticados no navegador e tiveram acessos permitidos/bloqueados conforme a matriz; uma conta temporária foi redirecionada obrigatoriamente para `/alterar-senha`.
+
+**Pendências identificadas:** validar o HTTPS e a confiança do certificado nos computadores reais antes de uso em rede.
+
+**Commit:** `e914d78`.
+
+**Estado:** Implementado e validado em ambiente local isolado.
+
+## Etapa 12 — 17/07/2026 — Integridade cadastral e auditoria
+
+**Pedido resumido:** substituir exclusões permanentes por ciclos reversíveis e registrar as mutações com autor e valores anteriores/novos.
+
+**Situação anterior:** `TipoCliente.INATIVO` misturava classificação comercial e estado operacional; operações relacionadas e histórico técnico eram incompletos.
+
+**Trabalho realizado:**
+
+- criado `StatusEmpresa { ATIVA, INATIVA }` e migrados os estados existentes sem excluir registros;
+- removida a exclusão permanente da empresa da interface;
+- implementadas inativação e reativação de empresas e contatos, saída de sócio e remoção lógica de certificados/documentos;
+- ampliadas validações no servidor e transações para operações relacionadas;
+- mantida a linha do tempo legível em `AlteracaoEmpresa` e criada auditoria técnica imutável separada;
+- automatizados eventos cadastrais relevantes e restringida a auditoria ao administrador.
+
+**Superfícies afetadas:** schema Prisma, cadastro empresarial, dashboard, ações de sócios/contatos/certificados/documentos e `/auditoria`.
+
+**Verificações registradas:** em 20/07/2026, uma empresa sintética foi inativada e ocultada do dashboard padrão, exibida no filtro de inativas e reativada; 1 sócio, 1 contato e 4 certificados permaneceram vinculados; as ações `INATIVAR` e `REATIVAR` foram registradas na auditoria com autor e diferenças.
+
+**Pendências identificadas:** ampliar a cobertura de integração das Server Actions e testar volumes maiores de auditoria.
+
+**Commit:** `e914d78`.
+
+**Estado:** Implementado e validado em ambiente local isolado.
+
+## Etapa 13 — 17/07/2026 — Ficha automatizada e rota de certificados
+
+**Pedido resumido:** criar uma ficha consolidada por empresa e retirar o controle de certificados do dashboard.
+
+**Situação anterior:** existia um componente inicial de ficha, mas não uma rota consolidada; certificados não tinham uma visão geral independente com limites formalizados.
+
+**Trabalho realizado:**
+
+- criada `/empresas/[id]/ficha` com dados cadastrais, sócios atuais/retirantes, contatos, certificados mínimos e histórico relevante;
+- criada `/certificados`, separada do dashboard;
+- limitados novos certificados a empresa, titular PJ/PF, emissão e vencimento, preservando campos legados;
+- implementada a classificação vencido, próximo até 30 dias e em dia a partir de 31 dias;
+- mantidas empresas inativas ocultas por padrão na listagem de certificados;
+- corrigida em 20/07/2026 a ficha móvel para remover overflow horizontal e empilhar blocos de forma legível.
+
+**Superfícies afetadas:** ficha, estilos responsivos/de impressão, central da empresa, dashboard e rota de certificados.
+
+**Verificações registradas:** navegador em desktop e viewport móvel de 390 px; ficha sem overflow em ambos; regras `@page` A4 retrato, ocultação de `.no-print` e largura de 210 mm confirmadas; limites -1, 0, 30 e 31 dias validados na interface e em testes; filtro “Próximos” retornou exatamente os registros de 0 e 30 dias.
+
+**Pendências identificadas:** repetir a conferência na pré-visualização nativa e em uma impressora física antes da implantação definitiva.
+
+**Commit:** implementação principal em `e914d78`; correção responsiva de 20/07/2026 ainda sem commit.
+
+**Estado:** Implementado e validado localmente; impressão física pendente.
+
+## Etapa 14 — 17/07/2026 — Confiabilidade, OCR e preparação de produção
+
+**Pedido resumido:** ampliar validações e testes, adicionar OCR local e preparar uma operação interna mais segura.
+
+**Situação anterior:** somente PDFs textuais eram importados e não havia comando abrangente de verificação, CI ou compose fechado de produção.
+
+**Trabalho realizado:**
+
+- adicionado OCR local para imagens e PDFs digitalizados, sempre com revisão humana antes do cadastro;
+- validada a assinatura real dos uploads e mantido o limite de 5 MB;
+- adicionados logs sem dados pessoais/fiscais e testes de regras críticas;
+- criado workflow de CI para migrações, testes, tipos e build;
+- criado compose de produção com `next start`, PostgreSQL sem porta publicada e HTTPS interno pelo Caddy;
+- criados scripts de backup, restauração e bootstrap administrativo.
+
+**Superfícies afetadas:** importador do Cartão CNPJ, validações, testes, CI, Docker e documentação operacional.
+
+**Verificações registradas:** em 20/07/2026, 15/15 testes principais e 5/5 testes de OCR passaram, TypeScript passou e o build de produção foi concluído em camada Docker isolada. Os testes OCR passaram a registrar explicitamente a fonte Liberation Sans já fornecida por `pdfjs-dist`, evitando imagens sintéticas vazias em ambientes Alpine.
+
+**Pendências identificadas:** não adicionar API externa até haver provedor, custos e termos definidos; acompanhar os avisos não bloqueantes do Auth.js/Jose no build Edge; validar HTTPS no ambiente definitivo.
+
+**Commit:** implementação principal em `e914d78`; estabilização dos testes OCR de 20/07/2026 ainda sem commit.
+
+**Estado:** Implementado e validado localmente.
+
+## Etapa 15 — 20/07/2026 — Validação final no navegador e fechamento documental
+
+**Pedido resumido:** retomar o trabalho interrompido e concluir as verificações restantes antes da implantação.
+
+**Situação anterior:** a implementação estava versionada, mas o histórico terminava no planejamento e faltavam evidências de navegador para papéis, ciclo da empresa, certificados e responsividade.
+
+**Trabalho realizado:**
+
+- criado/reutilizado banco temporário `autcompany_browser_test`, sem modificar os registros do banco principal;
+- criadas contas e registros exclusivamente sintéticos para QA;
+- validada a matriz de páginas e controles dos três papéis;
+- validada a troca obrigatória de senha temporária sem executar a troca final;
+- exercitados busca do dashboard, filtros de certificados, inativação, consulta de inativas, reativação e auditoria;
+- corrigido o layout móvel da ficha;
+- removido `encType` redundante de um formulário com Server Action, eliminando o erro do React no console;
+- corrigida a documentação que afirmava não haver testes automatizados;
+- atualizado este histórico com as entregas posteriores ao planejamento;
+- removidos o container e o banco temporários ao final, mantendo `app`, PostgreSQL principal e volumes ativos.
+
+**Superfícies afetadas:** `app/globals.css`, central cadastral, teste de OCR, `AGENTS.md` e este histórico.
+
+**Verificações registradas:** identidade e conteúdo das páginas, ausência de overlay de erro, nova aba sem erros/avisos de console, interações reais, screenshots desktop/celular, 15 testes principais, 5 testes OCR, TypeScript, build Docker isolado, quatro migrações atualizadas e restauração do backup com checksum.
+
+**Pendências identificadas:** cópia externa do backup, HTTPS nos equipamentos reais e conferência em impressora física dependem do ambiente de implantação; a suíte ainda não cobre todos os Server Actions de ponta a ponta.
+
+**Commit:** alterações desta retomada ainda sem commit.
+
+**Estado:** Validado localmente; pendências operacionais externas registradas.
+
+## Etapa 16 — 20/07/2026 — Ajustes do cadastro e correção do acesso local
+
+**Pedido resumido:** liberar o conteúdo dos CNAEs secundários, substituir “Tempo de empresa” pela data de abertura extraída do Cartão CNPJ, alterar os tipos de cliente para Fixo, Avulso e IRPF e corrigir o erro `missing required error components, refreshing...`.
+
+**Situação anterior:** os CNAEs secundários eram rejeitados quando não correspondiam ao formato rígido de CNAE; o formulário ainda exibia “Tempo de empresa”; `TipoCliente` usava `PRINCIPAL`, `SECUNDARIO`, `PROSPECT` e o legado `INATIVO`; o ambiente Docker compartilhava `.next` com o Windows e redirecionava rotas protegidas entre `127.0.0.1`, `localhost` e `0.0.0.0`, permitindo colisões de manifestos e cookies de sessão antigos.
+
+**Trabalho realizado:**
+
+- removida a validação de formato dos CNAEs secundários, preservando cada linha informada e mantendo a validação do CNAE principal;
+- removido “Tempo de empresa” do formulário e da gravação/auditoria corrente; a coluna legada foi preservada no banco para não apagar valores antigos;
+- destacado “Data de abertura (Cartão CNPJ)” no formulário, mantendo o preenchimento automático já fornecido pelo importador textual/OCR;
+- alterado `TipoCliente` para `FIXO`, `AVULSO` e `IRPF`;
+- criada migração transacional e não destrutiva que converte `PRINCIPAL → FIXO`, `SECUNDARIO → AVULSO`, `PROSPECT → IRPF` e o legado `INATIVO → FIXO`;
+- criado e restaurado o backup `backups/autcompany_pre_tipo_cliente_20260720.dump`, ignorado pelo Git, com SHA-256 `635A7B1A5285FAF9D04C1CF7B4B7B9F516ABC864AC7B306E8F94CEA45D4B38FE`;
+- validada a migração primeiro em cópia restaurada e depois aplicada ao banco principal por `prisma migrate deploy`;
+- isolado `.next` em volume Docker próprio e mantida sua limpeza automática a cada inicialização de desenvolvimento;
+- definido `http://127.0.0.1:3000` como endereço canônico local e corrigidos os redirecionamentos protegidos;
+- adotado o cookie exclusivo `autcompany.session-token`, evitando colisão com sessões antigas de outros ambientes Auth.js;
+- documentada a limpeza de cookies/dados do site após troca de `AUTH_SECRET`.
+
+**Superfícies afetadas:** formulário de empresa, validação no servidor, schema e migrações Prisma, seed/demonstração, autenticação, middleware, Docker Compose, configuração do Next.js, README e manual operacional.
+
+**Verificações registradas:** backup restaurado com 1 empresa, 1 sócio, 1 contato e registros relacionados preservados; migração validada em cópia com 1 empresa convertida para `FIXO`; cinco migrações aplicadas e status limpo; navegador abriu `/login` e redirecionou `/empresas/nova` para a URL canônica sem overlay ou erro de console; 16/16 testes principais e 5/5 testes OCR passaram; TypeScript, `git diff --check` e build de produção Docker concluídos.
+
+**Pendências identificadas:** após entrar com uma conta real, conferir visualmente o formulário autenticado e repetir uma importação de Cartão CNPJ real anonimizado; o build mantém apenas os avisos já conhecidos do `jose` sobre APIs de compressão no Edge e o alerta do Docker para o segredo fictício usado exclusivamente durante o build.
+
+**Commit:** alterações ainda sem commit.
+
+**Estado:** Implementado e validado localmente; conferência autenticada com documento real pendente.

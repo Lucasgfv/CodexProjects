@@ -35,11 +35,13 @@ services:
     build:
       context: .
       target: dependencies
-    command: ["pnpm", "dev", "--hostname", "0.0.0.0"]
+    command: ["sh", "-c", "rm -rf /app/.next/* && exec pnpm dev --hostname 0.0.0.0"]
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/autcompany?schema=public
       AUTH_SECRET: ${AUTH_SECRET:-desenvolvimento-local-altere-antes-de-usar-em-rede-2026}
+      AUTH_URL: http://127.0.0.1:3000
+      AUTH_TRUST_HOST: "true"
       WATCHPACK_POLLING: "true"
       CI: "true"
     ports:
@@ -47,6 +49,7 @@ services:
     volumes:
       - .:/app
       - app_node_modules:/app/node_modules
+      - app_next:/app/.next
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -69,4 +72,5 @@ services:
 volumes:
   postgres_data:
   app_node_modules:
+  app_next:
   pgadmin_data:
