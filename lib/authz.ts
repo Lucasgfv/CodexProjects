@@ -14,6 +14,22 @@ export type AuthenticatedUser = {
 };
 
 export const getCurrentUser = cache(async (): Promise<AuthenticatedUser | null> => {
+  if (process.env.AUTH_DISABLED === "true") {
+    const localActor = await prisma.usuario.findFirst({
+      where: { ativo: true },
+      orderBy: [{ papel: "asc" }, { createdAt: "asc" }],
+      select: { id: true },
+    });
+    if (!localActor) throw new Error("A autenticação está desativada, mas não existe usuário ativo para registrar as operações.");
+    return {
+      id: localActor.id,
+      nome: "Acesso local",
+      email: "local@autcompany",
+      papel: "ADMIN",
+      deveTrocarSenha: false,
+    };
+  }
+
   const session = await auth();
   if (!session?.user?.id) return null;
   const user = await prisma.usuario.findUnique({
@@ -37,4 +53,3 @@ export async function requireActionUser(roles: PapelUsuario[]) {
   if (!user || user.deveTrocarSenha || !roles.includes(user.papel)) throw new Error("Acesso não autorizado.");
   return user;
 }
-

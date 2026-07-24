@@ -10,7 +10,6 @@ const MAX_ATTEMPTS = 5;
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   ...authConfig,
-  trustHost: true,
   providers: [
     Credentials({
       credentials: {
@@ -57,4 +56,3 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
   ],
 });
-

@@ -425,3 +425,34 @@ Cada entrada deve conter: pedido resumido, situação anterior, trabalho realiza
 **Commit:** alterações ainda sem commit.
 
 **Estado:** Implementado e validado localmente; conferência autenticada com documento real pendente.
+
+## Etapa 17 — 21/07/2026 — Cartão CNPJ sem retenção, primeiro login e modo operacional
+
+**Pedido resumido:** impedir definitivamente o armazenamento do Cartão CNPJ, corrigir o erro de configuração no primeiro login e tornar a navegação diária mais rápida.
+
+**Situação anterior:** o importador preenchia o formulário, mas o mesmo arquivo ainda acompanhava a criação da empresa e era salvo como `DocumentoEmpresa`; a opção também aparecia nos anexos manuais. A criação de usuários funcionava, porém o primeiro login falhava em um ambiente que misturava `localhost`, `127.0.0.1` e `0.0.0.0`. O Compose padrão executava `next dev`, montava arquivos do Windows e recompilava rotas sob demanda.
+
+**Trabalho realizado:**
+
+- mantida `/api/cnpj/cartao` como processador temporário em memória e limpo o seletor de arquivo após cada leitura;
+- removido o cartão do envio final, das ações de criação/edição e da lista de anexos manuais, com rejeição adicional no servidor;
+- preservado temporariamente o valor `CARTAO_CNPJ` no enum para compatibilidade histórica;
+- criado comando de limpeza com confirmação explícita, limitado a documentos `CARTAO_CNPJ`;
+- gerado backup local com checksum, restaurado em banco temporário e conferidas as relações essenciais antes da limpeza;
+- removido o único documento legado desse tipo e confirmado total zero no banco principal;
+- centralizadas a origem pública, política de cookies, redirects e callbacks internos da autenticação;
+- adicionados códigos de diagnóstico seguros, sem senha, hash, cookie, e-mail, token ou conteúdo fiscal;
+- validado o ciclo completo de primeiro acesso: criação por Admin, senha temporária, troca obrigatória, rejeição da senha antiga e aceitação da nova;
+- transformado o Compose padrão em imagem operacional com `next build`/`next start`, sem montagem do código-fonte e sem Watchpack;
+- criado `compose.dev.yml` opcional para desenvolvimento com atualização automática;
+- adicionados estados globais de carregamento e páginas de erro com código de diagnóstico.
+
+**Superfícies afetadas:** importador e formulário do Cartão CNPJ, Server Actions e documentos, Auth.js, login, middleware, cookies, Dockerfiles/Compose, páginas globais de carregamento/erro, testes e documentação.
+
+**Verificações registradas:** 19 testes principais passaram; TypeScript e build de produção passaram; backup `backups/daily/autcompany_20260721_102903.dump` foi restaurado com sucesso, preservando 2 empresas, 1 sócio, 1 contato, 1 certificado, 1 alteração e 1 documento antes da limpeza; banco confirmou zero documentos `CARTAO_CNPJ` depois dela; anexos permitidos continuaram disponíveis; Admin e Operador foram validados no navegador, e as permissões dos três papéis permanecem cobertas por testes; certificado, cadastro, consulta e ficha responderam entre 117 ms e 209 ms após aquecimento, sem recompilação ou Watchpack.
+
+**Pendências identificadas:** copiar o backup para NAS/outro computador; validar HTTPS e cookies seguros no endereço definitivo; testar impressão em equipamento físico; ampliar a cobertura ponta a ponta. Permanecem avisos não bloqueantes do `jose` sobre APIs de compressão no build Edge.
+
+**Commit:** alterações ainda sem commit.
+
+**Estado:** Implementado e validado localmente; cópia externa e validações do ambiente definitivo pendentes.

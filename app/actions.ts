@@ -23,7 +23,7 @@ import { redirect } from "next/navigation";
 const EDIT_ROLES = ["ADMIN", "OPERADOR"] as const;
 const CONTACT_TYPES = new Set<TipoContatoEmpresa>(["PRINCIPAL", "SOCIETARIO", "FISCAL", "CONTABIL", "DEPARTAMENTO_PESSOAL", "FINANCEIRO", "OUTRO"]);
 const CHANGE_TYPES = new Set<TipoAlteracaoEmpresa>(["ENDERECO", "ATIVIDADES", "RAZAO_SOCIAL", "CAPITAL_SOCIAL", "REGIME_TRIBUTARIO", "CONTATOS", "SOCIOS_ENTRADA", "SOCIOS_SAIDA", "SOCIOS_ENTRADA_E_SAIDA", "SEM_ALTERACAO_SOCIOS", "OUTRA"]);
-const DOCUMENT_TYPES = new Set<TipoDocumentoEmpresa>(["CARTAO_CNPJ", "CONTRATO_SOCIAL", "ALTERACAO_CONTRATUAL", "BIC", "TEC", "ALVARA", "OUTRO"]);
+const DOCUMENT_TYPES = new Set<TipoDocumentoEmpresa>(["CONTRATO_SOCIAL", "ALTERACAO_CONTRATUAL", "BIC", "TEC", "ALVARA", "OUTRO"]);
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const COMPANY_AUDIT_FIELDS = [
@@ -134,20 +134,11 @@ export async function createEmpresa(_previous: CompanyActionState, form: FormDat
   const actor = await requireActionUser([...EDIT_ROLES]);
   const result = validateCompanyForm(form);
   if (!result.ok) return result.state;
-  const card = fileFrom(form, "cartaoCnpj");
-  if (card) {
-    const validation = await validateUpload(card);
-    if (!validation.ok) return { status: "error", message: validation.error };
-  }
 
   let empresaId: string;
   try {
     empresaId = await prisma.$transaction(async (tx) => {
       const empresa = await tx.empresa.create({ data: { ...result.data, historicoAlteracoes: [] } });
-      if (card) {
-        const document = await tx.documentoEmpresa.create({ data: { empresaId: empresa.id, ...await documentFromFile(card, "CARTAO_CNPJ") } });
-        await createAudit(tx, actor, "DOCUMENTO_EMPRESA", document.id, "CRIAR", { tipo: { novo: "CARTAO_CNPJ" } });
-      }
       await createAudit(tx, actor, "EMPRESA", empresa.id, "CRIAR", { cnpj: { novo: empresa.cnpj }, razaoSocial: { novo: empresa.razaoSocial } });
       return empresa.id;
     });
@@ -163,11 +154,6 @@ export async function updateEmpresa(id: string, _previous: CompanyActionState, f
   const actor = await requireActionUser([...EDIT_ROLES]);
   const result = validateCompanyForm(form);
   if (!result.ok) return result.state;
-  const card = fileFrom(form, "cartaoCnpj");
-  if (card) {
-    const validation = await validateUpload(card);
-    if (!validation.ok) return { status: "error", message: validation.error };
-  }
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -177,10 +163,6 @@ export async function updateEmpresa(id: string, _previous: CompanyActionState, f
       if (Object.keys(changes).length) {
         await createAudit(tx, actor, "EMPRESA", id, "ATUALIZAR", changes);
         await automaticHistory(tx, id, actor.id, changes);
-      }
-      if (card) {
-        const document = await tx.documentoEmpresa.create({ data: { empresaId: id, ...await documentFromFile(card, "CARTAO_CNPJ") } });
-        await createAudit(tx, actor, "DOCUMENTO_EMPRESA", document.id, "CRIAR", { tipo: { novo: "CARTAO_CNPJ" } });
       }
     });
   } catch (error) {
@@ -379,6 +361,7 @@ export async function addDocumento(empresaId: string, form: FormData) {
   const file = fileFrom(form, "documento");
   const typeRaw = text(form, "tipoDocumento") as TipoDocumentoEmpresa;
   if (!file) registrationRedirect(empresaId, "documentos", "erro", "Selecione um documento.");
+  if (typeRaw === "CARTAO_CNPJ") registrationRedirect(empresaId, "documentos", "erro", "O Cartão CNPJ é usado somente para leitura e não pode ser armazenado.");
   const validation = await validateUpload(file);
   if (!validation.ok) registrationRedirect(empresaId, "documentos", "erro", validation.error);
   if (!DOCUMENT_TYPES.has(typeRaw)) registrationRedirect(empresaId, "documentos", "erro", "Selecione um tipo de documento válido.");

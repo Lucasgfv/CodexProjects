@@ -300,3 +300,9 @@ tr:last-child td { border-bottom: 0; }
   .sheet-box, .sheet-header, .partner, .workflow { page-break-inside: avoid !important; break-inside: avoid !important; }
   .workflow { position: static; margin-top: 3mm; }
 }
+/* Estado compartilhado entre carregamento e falhas de rota. */
+.route-state { min-height: 55vh; display: grid; place-content: center; justify-items: center; gap: 1rem; padding: 2rem; text-align: center; }
+.route-state h1, .route-state p { margin: 0; }
+.route-spinner { width: 2rem; height: 2rem; border: 3px solid #d6dce5; border-top-color: #2457a7; border-radius: 999px; animation: route-spin .75s linear infinite; }
+@keyframes route-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .route-spinner { animation-duration: 1.5s; } }

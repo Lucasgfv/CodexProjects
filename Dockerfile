@@ -8,6 +8,8 @@ RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS builder
 ENV AUTH_SECRET=build-only-secret-not-used-at-runtime-2026
+ENV AUTH_URL=http://127.0.0.1:3000
+ENV AUTCOMPANY_PUBLIC_URL=http://127.0.0.1:3000
 ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build?schema=public
 COPY . .
 RUN pnpm build
@@ -20,4 +22,4 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/next.config.ts /app/tsconfig.json ./
 EXPOSE 3000
-CMD ["pnpm", "start", "--hostname", "0.0.0.0"]
+CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0"]

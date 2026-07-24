@@ -44,6 +44,7 @@ docker compose ps
 ```
 
 O serviço `migrate` executa `prisma migrate deploy` antes da aplicação. O fluxo normal não usa `prisma db push`.
+O Compose padrão é operacional: constrói a aplicação com `next build`, executa com `next start` e não monta o código-fonte do Windows. Assim, a navegação normal não recompila rotas nem depende do Watchpack.
 
 3. Crie o primeiro administrador uma única vez, sem colocar a senha no repositório:
 
@@ -53,7 +54,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-admin.ps1 -Email ad
 
 4. Abra `http://127.0.0.1:3000`, entre com a conta criada e troque a senha temporária.
 
-As portas de desenvolvimento são vinculadas somente a `127.0.0.1`: aplicação `3000`, PostgreSQL `5432` e pgAdmin `5050`.
+As portas locais são vinculadas somente a `127.0.0.1`: aplicação `3000`, PostgreSQL `5432` e pgAdmin `5050`. Use sempre `http://127.0.0.1:3000` nesse ambiente; `0.0.0.0` serve apenas para o processo escutar conexões e não deve aparecer em callbacks.
+
+Para desenvolvimento de código com atualização automática, use explicitamente o complemento opcional:
+
+```powershell
+docker compose -f compose.yml -f compose.dev.yml up --build -d
+```
+
+Esse modo é mais lento no Docker Desktop para Windows e não é indicado para o uso diário do sistema.
 
 ## Execução local
 
@@ -69,7 +78,7 @@ Use `pnpm db:seed` somente em banco de desenvolvimento vazio ou descartável. O 
 
 ## Migrações e banco existente
 
-O banco local analisado em 17/07/2026 foi copiado, restaurado, comparado com um banco vazio e conciliado. As quatro migrações atuais estão aplicadas e `prisma migrate status` está limpo.
+O banco local analisado em 17/07/2026 foi copiado, restaurado, comparado com um banco vazio e conciliado. As cinco migrações atuais estão aplicadas e `prisma migrate status` está limpo.
 
 Para qualquer outro banco criado anteriormente por `db push`, não marque migrações como aplicadas por suposição. Faça backup restaurável, valide a restauração, compare os schemas e siga o procedimento de baseline do Prisma. Nunca use `prisma migrate reset`, `docker compose down -v` ou exclusão de banco com dados.
 
@@ -90,7 +99,7 @@ O importador:
 - suporta CNPJ numérico e alfanumérico;
 - exige que a pessoa revise os campos antes de salvar, com aviso especial para baixa confiança.
 
-Nenhuma API externa é utilizada. Arquivos anexados ao cadastro são armazenados no PostgreSQL; o OCR não salva automaticamente os dados extraídos.
+Nenhuma API externa é utilizada. O arquivo do Cartão CNPJ existe somente em memória durante a leitura, o campo é limpo depois do processamento e nenhum byte desse cartão é armazenado. Contrato social, alterações, BIC, TEC, alvará e outros documentos anexados explicitamente continuam sendo armazenados no PostgreSQL.
 
 ## Certificados
 

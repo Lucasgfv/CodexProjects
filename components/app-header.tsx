@@ -14,8 +14,7 @@ export function AppHeader({ user }: { user: HeaderUser }) {
       {user.papel === "ADMIN" ? <Link className="top-link" href="/usuarios"><Users size={16} /> Usuários</Link> : null}
       {canEdit ? <Link className="button header-button" href="/empresas/nova"><Plus size={17} /> Nova empresa</Link> : null}
       <span className="user-summary"><strong>{user.nome}</strong><small>{user.papel.toLocaleLowerCase("pt-BR")}</small></span>
-      <form action={logoutAction}><button className="icon-button" type="submit" title="Sair" aria-label="Sair"><LogOut size={17} /></button></form>
+      {user.nome !== "Acesso local" ? <form action={logoutAction}><button className="icon-button" type="submit" title="Sair" aria-label="Sair"><LogOut size={17} /></button></form> : null}
     </nav>
   </header>;
 }
-

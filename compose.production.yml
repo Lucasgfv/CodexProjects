@@ -16,7 +16,7 @@ services:
 
   migrate:
     build: .
-    command: ["pnpm", "db:deploy"]
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
     environment:
       DATABASE_URL: ${DATABASE_URL:?Defina DATABASE_URL com senha codificada para URL e host db}
     depends_on:
@@ -30,6 +30,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:?Defina DATABASE_URL com senha codificada para URL e host db}
       AUTH_SECRET: ${AUTH_SECRET:?Defina AUTH_SECRET}
+      AUTH_URL: https://${AUTCOMPANY_HOST:?Defina AUTCOMPANY_HOST}
+      AUTCOMPANY_PUBLIC_URL: https://${AUTCOMPANY_HOST:?Defina AUTCOMPANY_HOST}
       AUTH_TRUST_HOST: "true"
     expose:
       - "3000"

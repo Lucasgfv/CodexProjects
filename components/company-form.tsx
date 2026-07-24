@@ -20,6 +20,7 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
   const [state, formAction, pending] = useActionState(action, INITIAL_COMPANY_ACTION_STATE);
   const [importStatus, setImportStatus] = useState<{ loading: boolean; message?: string; error?: boolean }>({ loading: false });
   const formRef = useRef<HTMLFormElement>(null);
+  const cardInputRef = useRef<HTMLInputElement>(null);
   const cancelHref = company?.id ? `/empresas/${company.id}` : "/";
 
   async function importCard(file: File | undefined) {
@@ -39,6 +40,8 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
       setImportStatus({ loading: false, message: `${result.message ?? "Dados importados."}${confidence}` });
     } catch (error) {
       setImportStatus({ loading: false, error: true, message: error instanceof Error ? error.message : "Não foi possível importar o PDF." });
+    } finally {
+      if (cardInputRef.current) cardInputRef.current.value = "";
     }
   }
 
@@ -47,7 +50,7 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
     "aria-describedby": state.fieldErrors?.[name] ? `${name}-error` : undefined,
   });
 
-  return <form ref={formRef} action={formAction} className="form-card" encType="multipart/form-data">
+  return <form ref={formRef} action={formAction} className="form-card">
     <div>
       <p className="eyebrow">Cadastro empresarial</p>
       <h1 className="form-title">{company ? "Editar dados principais" : "Nova empresa"}</h1>
@@ -57,9 +60,9 @@ export function CompanyForm({ action, company }: { action: CompanyAction; compan
     {state.status === "error" && <div className="form-alert error" role="alert">{state.message}</div>}
 
     <section className="import-card" aria-labelledby="import-title">
-      <div><FileUp size={22} /><div><h2 id="import-title">Importar Cartão CNPJ</h2><p>Envie PDF, JPG ou PNG. PDFs textuais são lidos diretamente; documentos digitalizados usam OCR local e sempre exigem revisão.</p></div></div>
+      <div><FileUp size={22} /><div><h2 id="import-title">Importar Cartão CNPJ</h2><p>Envie PDF, JPG ou PNG. O arquivo é usado somente durante a leitura, não é armazenado e os dados preenchidos sempre exigem revisão.</p></div></div>
       <label className="button secondary file-button" htmlFor="cartaoCnpj">Selecionar arquivo</label>
-      <input className="sr-only" id="cartaoCnpj" name="cartaoCnpj" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(event) => importCard(event.target.files?.[0])} />
+      <input ref={cardInputRef} className="sr-only" id="cartaoCnpj" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(event) => importCard(event.target.files?.[0])} />
       {importStatus.message && <p className={`import-message ${importStatus.error ? "error-text" : ""}`} aria-live="polite">{importStatus.loading && <LoaderCircle className="spin" size={15} />}{importStatus.message}</p>}
     </section>
 

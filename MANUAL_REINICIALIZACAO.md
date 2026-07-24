@@ -17,13 +17,25 @@ docker compose logs --tail 100 migrate app db
 
 O container `migrate` deve terminar com código `0`. Ele executa `prisma migrate deploy`; a aplicação só inicia depois disso. Se a migração falhar, não use `db push` para contornar o erro: interrompa o uso e analise a migração e o backup.
 
-No ambiente de desenvolvimento em Docker, a aplicação mantém `.next` em um volume Linux separado e remove somente esse cache antes de iniciar. Isso evita misturar manifestos gerados no Windows com os do container, situação que pode provocar a mensagem `missing required error components, refreshing...`; o PostgreSQL e seus volumes não são tocados. Aguarde o log indicar que o Next.js está pronto antes do primeiro acesso.
+O Compose padrão constrói uma imagem fechada com `next build`, executa com `next start` e não monta o código-fonte do Windows. Não há Watchpack, polling ou recompilação de rotas durante a navegação. Isso elimina a principal causa local de lentidão e de manifestos inconsistentes associados à mensagem `missing required error components, refreshing...`. O PostgreSQL e seus volumes não são tocados.
 
 - Sistema: `http://127.0.0.1:3000`
 - pgAdmin: `http://localhost:5050`
 - PostgreSQL no próprio computador: `localhost:5432`
 
 Essas portas ficam vinculadas a `127.0.0.1` e não devem ser publicadas na rede.
+
+Use sempre `http://127.0.0.1:3000` como endereço local. `0.0.0.0` é apenas o endereço de escuta interno e nunca deve ser usado no navegador ou como callback. As variáveis `AUTH_URL` e `AUTCOMPANY_PUBLIC_URL` devem apontar para a mesma origem pública; em produção, ambas devem usar o endereço HTTPS definitivo.
+
+## Desenvolvimento em Docker com atualização automática
+
+Use este modo somente para alterar código:
+
+```powershell
+docker compose -f compose.yml -f compose.dev.yml up --build -d
+```
+
+O complemento monta o código-fonte e usa `next dev`. No Docker Desktop para Windows, recompilações e monitoramento de arquivos podem tornar as primeiras navegações significativamente mais lentas. Volte ao modo operacional com `docker compose down` e depois `docker compose up --build -d`, sem acrescentar `-v`.
 
 ## Criar o primeiro administrador
 
@@ -167,6 +179,21 @@ pnpm dev
 Esse procedimento não toca no PostgreSQL.
 
 Se o erro aparecer após trocar `AUTH_SECRET`, limpe os cookies e dados do site de `localhost` e `127.0.0.1` no navegador e entre novamente. Sessões criadas com o segredo anterior não podem ser descriptografadas pelo novo ambiente. No desenvolvimento Docker, use o endereço canônico `http://127.0.0.1:3000`, configurado também em `AUTH_URL`, para evitar redirecionamentos para `0.0.0.0`.
+
+Se `localhost:3000` apresentar um erro diferente de `127.0.0.1:3000`, verifique se outro processo Node está ocupando a porta IPv6. O Docker operacional deste projeto publica a aplicação em `127.0.0.1`; misturar as duas origens também separa cookies e pode levar o navegador a uma instância antiga.
+
+## Cartão CNPJ sem retenção
+
+O Cartão CNPJ é enviado apenas ao processador temporário de extração. Depois da leitura, o seletor de arquivo é limpo e o cadastro salva somente os campos revisados; o PDF ou a imagem não integra o envio final. O servidor também rejeita `CARTAO_CNPJ` como anexo manual.
+
+Se um banco legado ainda tiver documentos desse tipo, primeiro gere um backup restaurável e valide a restauração. Só depois, com intenção explícita, execute:
+
+```powershell
+$env:AUTCOMPANY_CONFIRM_PURGE_CNPJ = "REMOVER"
+pnpm.cmd data:purge-cnpj-documents
+```
+
+O comando apaga permanentemente apenas registros `CARTAO_CNPJ`. Contratos, alterações, BIC, TEC, alvarás e outros anexos permanecem intactos.
 
 ## Verificação de saúde
 

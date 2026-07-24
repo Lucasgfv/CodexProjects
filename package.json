@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "test": "tsx --test tests/company-validation.test.ts tests/cnpj-card.test.ts tests/certificate-status.test.ts tests/password.test.ts tests/upload-validation.test.ts tests/permissions.test.ts",
+    "test": "tsx --test tests/company-validation.test.ts tests/cnpj-card.test.ts tests/certificate-status.test.ts tests/password.test.ts tests/upload-validation.test.ts tests/permissions.test.ts tests/auth-url.test.ts",
     "test:ocr": "tsx --test tests/cnpj-ocr.test.ts",
     "verify": "pnpm test && pnpm exec tsc --noEmit && pnpm build",
     "lint": "next lint",
@@ -16,6 +16,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
     "db:seed": "tsx prisma/seed.ts",
+    "data:purge-cnpj-documents": "tsx scripts/purge-cnpj-documents.ts",
     "user:bootstrap": "tsx scripts/bootstrap-admin.ts"
   },
   "dependencies": {
