@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gerador local de contrato de prestação de serviços contábeis e procuração da AUTCONTÁBIL.">
+  <title>Gerador de Contrato | AUTCONTÁBIL</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/docx@9.7.1/dist/index.iife.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#081b2f',
+            navy: '#09294a',
+            teal: '#07866f',
+            mint: '#dff5ee',
+            canvas: '#f4f7f8'
+          },
+          boxShadow: {
+            soft: '0 18px 45px -28px rgba(8, 27, 47, .35)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    input, textarea, select, button { font: inherit; }
+    .field {
+      width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: #fff;
+      padding: .72rem .85rem; color: #0f172a; outline: none; transition: .18s ease;
+    }
+    .field:hover { border-color: #94a3b8; }
+    .field:focus { border-color: #07866f; box-shadow: 0 0 0 3px rgba(7, 134, 111, .12); }
+    .field[aria-invalid="true"] { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, .09); }
+    .field-label { display: block; margin-bottom: .42rem; font-size: .78rem; font-weight: 700; color: #334155; }
+    .section-number {
+      display: inline-flex; width: 1.8rem; height: 1.8rem; align-items: center; justify-content: center;
+      border-radius: 999px; background: #07866f; color: white; font-size: .8rem; font-weight: 800;
+    }
+    #cnpj-pdf-dropzone.is-dragging { border-color: #07866f; background: #ecfdf5; box-shadow: 0 0 0 4px rgba(7, 134, 111, .12); }
+    #cnpj-pdf-dropzone[aria-disabled="true"] { cursor: not-allowed; opacity: .65; }
+    .pdf-status[data-state="processing"] { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+    .pdf-status[data-state="success"] { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+    .pdf-status[data-state="warning"] { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+    .pdf-status[data-state="error"] { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+    .spinner { width: 1.1rem; height: 1.1rem; border: 2px solid rgba(255,255,255,.42); border-top-color: white; border-radius: 999px; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body class="min-h-screen bg-canvas text-slate-900 antialiased">
+  <header class="border-b border-white/10 bg-ink text-white">
+    <div class="mx-auto flex max-w-[1480px] items-center justify-between gap-5 px-5 py-4 lg:px-8">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-sm font-black tracking-tight text-ink">
+          <span><span class="text-teal">A</span>UT</span>
+        </div>
+        <div class="min-w-0">
+          <p class="truncate text-base font-extrabold tracking-tight">AUTCONTÁBIL</p>
+          <p class="truncate text-[11px] tracking-[.16em] text-slate-300">ASSESSORIA LTDA</p>
+        </div>
+      </div>
+      <div class="hidden items-center gap-2 text-xs font-medium text-slate-300 sm:flex">
+        <svg class="h-4 w-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l7 3v5c0 4.7-2.9 8.1-7 10-4.1-1.9-7-5.3-7-10V6l7-3z"/><path d="m9 12 2 2 4-4"/></svg>
+        Seus dados permanecem neste dispositivo
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-[1480px] px-4 py-7 sm:px-6 lg:px-8 lg:py-10">
+    <div class="mb-7 max-w-3xl">
+      <h1 class="text-3xl font-extrabold tracking-[-.035em] text-ink sm:text-4xl">Gere o contrato contábil e a procuração</h1>
+      <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Preencha os dados da empresa e de seus representantes. O arquivo Word será criado localmente, com o papel timbrado e o texto jurídico completo.</p>
+    </div>
+
+    <div id="library-warning" class="mb-5 hidden rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
+      A biblioteca de geração do Word não foi carregada. Verifique sua conexão com a internet e atualize a página.
+    </div>
+
+    <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <form id="contract-form" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft" novalidate>
+        <section class="border-b border-slate-200 p-5 sm:p-7" aria-labelledby="empresa-title">
+          <div class="mb-5 flex items-center gap-3">
+            <span class="section-number">1</span>
+            <div>
+              <h2 id="empresa-title" class="text-lg font-extrabold text-ink">Dados do Contratante</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Identificação da empresa que contratará os serviços.</p>
+            </div>
+          </div>
+          <div class="mb-5">
+            <div id="cnpj-pdf-dropzone" role="button" tabindex="0" aria-controls="cnpj-pdf-input" aria-describedby="cnpj-pdf-help" class="group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center transition hover:border-teal hover:bg-emerald-50/60 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+              <input id="cnpj-pdf-input" class="hidden" type="file" accept="application/pdf,.pdf">
+              <span class="grid h-11 w-11 place-items-center rounded-xl bg-white text-teal shadow-sm ring-1 ring-slate-200 transition group-hover:-translate-y-0.5 group-hover:shadow-md" aria-hidden="true">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M12 17V10M9 13l3-3 3 3"/></svg>
+              </span>
+              <p class="mt-3 text-sm font-extrabold text-ink">Arraste o PDF do Cartão CNPJ aqui ou clique para selecionar</p>
+              <p id="cnpj-pdf-help" class="mt-1 text-xs leading-5 text-slate-500">O arquivo é processado somente neste navegador. Confira os dados preenchidos antes de continuar.</p>
+            </div>
+            <div id="cnpj-pdf-status" class="pdf-status mt-3 hidden items-start gap-3 rounded-xl border px-4 py-3" role="status" aria-live="polite" data-state="processing">
+              <span id="cnpj-pdf-status-icon" class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center" aria-hidden="true"></span>
+              <div class="min-w-0">
+                <p id="cnpj-pdf-status-title" class="text-sm font-extrabold">Processando PDF...</p>
+                <p id="cnpj-pdf-status-detail" class="mt-0.5 break-words text-xs leading-5 opacity-80"></p>
+              </div>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="md:col-span-1">
+              <span class="field-label">Razão Social *</span>
+              <input class="field" id="razao-social" name="razaoSocial" type="text" required autocomplete="organization" placeholder="Ex.: Empresa Exemplo Ltda">
+            </label>
+            <label>
+              <span class="field-label">CNPJ *</span>
+              <input class="field" id="cnpj" name="cnpj" type="text" inputmode="numeric" required maxlength="18" placeholder="00.000.000/0000-00">
+            </label>
+            <label class="md:col-span-2">
+              <span class="field-label">Endereço completo *</span>
+              <textarea class="field min-h-24 resize-y" id="endereco-empresa" name="enderecoEmpresa" required placeholder="Rua, número, complemento, bairro, cidade/UF e CEP"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="border-b border-slate-200 p-5 sm:p-7" aria-labelledby="socios-title">
+          <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-3">
+              <span class="section-number">2</span>
+              <div>
+                <h2 id="socios-title" class="text-lg font-extrabold text-ink">Sócios / Representantes</h2>
+                <p class="mt-0.5 text-xs text-slate-500">Inclua todas as pessoas que constarão no documento.</p>
+              </div>
+            </div>
+            <button id="add-partner" type="button" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-teal px-4 text-sm font-bold text-teal transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Adicionar sócio
+            </button>
+          </div>
+          <div id="partners-container" class="space-y-4"></div>
+          <p class="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500">
+            <svg class="mt-0.5 h-4 w-4 shrink-0 text-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            Cada sócio receberá uma linha de assinatura no contrato e na procuração.
+          </p>
+        </section>
+
+        <section class="border-b border-slate-200 p-5 sm:p-7" aria-labelledby="financeiro-title">
+          <div class="mb-5 flex items-center gap-3">
+            <span class="section-number">3</span>
+            <div>
+              <h2 id="financeiro-title" class="text-lg font-extrabold text-ink">Dados Financeiros</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Honorário mensal previsto no contrato.</p>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <label>
+              <span class="field-label">Valor do Honorário Mensal (R$) *</span>
+              <div class="flex rounded-[.65rem] border border-slate-300 bg-white transition focus-within:border-teal focus-within:ring-4 focus-within:ring-emerald-100">
+                <span class="grid min-w-12 place-items-center border-r border-slate-200 text-sm font-bold text-slate-500">R$</span>
+                <input class="min-w-0 flex-1 rounded-r-[.65rem] border-0 bg-transparent px-3 py-[.72rem] outline-none" id="honorario" name="honorario" type="text" inputmode="decimal" required placeholder="0,00">
+              </div>
+            </label>
+            <label>
+              <span class="field-label">Valor por extenso *</span>
+              <input class="field" id="valor-extenso" name="valorExtenso" type="text" required placeholder="Ex.: quatrocentos e vinte e sete reais">
+              <span class="mt-1.5 block text-[11px] leading-4 text-slate-500">Preenchido automaticamente; pode ser revisado.</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="p-5 sm:p-7" aria-labelledby="data-title">
+          <div class="mb-5 flex items-center gap-3">
+            <span class="section-number">4</span>
+            <div>
+              <h2 id="data-title" class="text-lg font-extrabold text-ink">Data do Contrato</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Preenchida automaticamente no dia da elaboração.</p>
+            </div>
+          </div>
+          <label class="block max-w-sm">
+            <span class="field-label">Data de assinatura (automática) *</span>
+            <input class="field cursor-default bg-slate-50" id="data-assinatura" name="dataAssinatura" type="date" required readonly aria-readonly="true">
+            <span class="mt-1.5 block text-[11px] leading-4 text-slate-500">Atualizada automaticamente no momento da geração.</span>
+          </label>
+          <div class="mt-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-900">
+            Revise os dados antes de gerar. O documento será baixado em formato <strong>.docx</strong> e poderá ser aberto no Microsoft Word ou LibreOffice.
+          </div>
+        </section>
+      </form>
+
+      <aside class="space-y-5 xl:sticky xl:top-5" aria-label="Resumo da geração">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <div class="flex items-center gap-3 border-b border-slate-200 pb-4">
+            <div class="grid h-10 w-10 place-items-center rounded-xl bg-mint text-teal">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 12h2M13 12h2M9 16h2M13 16h2"/></svg>
+            </div>
+            <div>
+              <h2 class="font-extrabold text-ink">Dados da Contratada</h2>
+              <p class="text-xs text-slate-500">Informações fixas no documento</p>
+            </div>
+          </div>
+          <dl class="mt-4 space-y-3 text-sm">
+            <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-400">Razão social</dt><dd class="mt-1 font-bold text-ink">AUTCONTÁBIL ASSESSORIA LTDA</dd></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-400">CNPJ</dt><dd class="mt-1 text-slate-700">22.867.591/0001-31</dd></div>
+              <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-400">CRC/MG</dt><dd class="mt-1 text-slate-700">016534/O-5</dd></div>
+            </div>
+            <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-400">Responsável técnico</dt><dd class="mt-1 leading-5 text-slate-700">WENIARLEI BOTELHO LUIZ BRANDÃO<br><span class="text-xs text-slate-500">CRC/MG 110687/O</span></dd></div>
+          </dl>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <h2 class="flex items-center gap-2 font-extrabold text-ink">
+            <svg class="h-5 w-5 text-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M10 13h5M10 17h5"/></svg>
+            Arquivo que será gerado
+          </h2>
+          <ul class="mt-4 space-y-4">
+            <li class="flex gap-3"><span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 4 4 10-10"/></svg></span><div><p class="text-sm font-bold text-slate-800">Contrato de prestação de serviços</p><p class="mt-1 text-xs leading-5 text-slate-500">Onze cláusulas, honorários e assinaturas.</p></div></li>
+            <li class="flex gap-3"><span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 4 4 10-10"/></svg></span><div><p class="text-sm font-bold text-slate-800">Procuração em nova página</p><p class="mt-1 text-xs leading-5 text-slate-500">Poderes e representantes preenchidos automaticamente.</p></div></li>
+            <li class="flex gap-3"><span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700"><svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 4 4 10-10"/></svg></span><div><p class="text-sm font-bold text-slate-800">Papel timbrado em todas as páginas</p><p class="mt-1 text-xs leading-5 text-slate-500">Marca, registros e canais de contato.</p></div></li>
+          </ul>
+
+          <div id="readiness" class="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" role="status" aria-live="polite">
+            <p class="flex items-center gap-2 text-sm font-bold text-slate-700"><span id="readiness-dot" class="h-2.5 w-2.5 rounded-full bg-amber-400"></span><span id="readiness-title">Preenchimento pendente</span></p>
+            <p id="readiness-text" class="mt-1 text-xs leading-5 text-slate-500">Complete os campos obrigatórios para gerar o documento.</p>
+          </div>
+
+          <button id="generate-button" form="contract-form" type="submit" class="mt-4 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-teal px-5 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-60">
+            <svg id="button-icon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5M12 11v6M9.5 14.5 12 17l2.5-2.5"/></svg>
+            <span id="button-label">Gerar e Baixar Contrato em Word (.docx)</span>
+          </button>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-soft sm:p-6">
+          <h2 class="flex items-center gap-2 font-extrabold text-ink">
+            <svg class="h-5 w-5 text-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            Privacidade por padrão
+          </h2>
+          <p class="mt-2 text-xs leading-5 text-slate-500">O processamento ocorre integralmente no seu navegador. Nenhum dado do formulário é armazenado ou transmitido pela aplicação.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div id="toast" class="pointer-events-none fixed bottom-5 left-1/2 z-50 hidden w-[min(92vw,520px)] -translate-x-1/2 rounded-xl border px-4 py-3 text-sm font-semibold shadow-2xl" role="status" aria-live="polite"></div>
+
+  <template id="partner-template">
+    <fieldset class="partner-card rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+      <legend class="sr-only">Dados do sócio</legend>
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="grid h-8 w-8 place-items-center rounded-lg bg-white text-teal shadow-sm ring-1 ring-slate-200">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+          </div>
+          <h3 class="partner-heading text-sm font-extrabold text-ink">Sócio 1</h3>
+        </div>
+        <button type="button" class="remove-partner inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-4 focus:ring-red-100" aria-label="Remover sócio">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></svg>
+        </button>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <label class="md:col-span-2 lg:col-span-2"><span class="field-label">Nome Completo *</span><input class="field partner-name" type="text" required autocomplete="name" placeholder="Nome sem abreviações"></label>
+        <label><span class="field-label">Nacionalidade *</span><input class="field partner-nationality" type="text" required value="brasileiro(a)" placeholder="Ex.: brasileiro(a)"></label>
+        <label><span class="field-label">Estado Civil *</span><input class="field partner-civil-status" type="text" required placeholder="Ex.: casado(a)"></label>
+        <label><span class="field-label">Profissão *</span><input class="field partner-profession" type="text" required placeholder="Ex.: empresário(a)"></label>
+        <label><span class="field-label">CPF *</span><input class="field partner-cpf" type="text" inputmode="numeric" required maxlength="14" placeholder="000.000.000-00"></label>
+        <label><span class="field-label">RG *</span><input class="field partner-rg" type="text" required placeholder="Número do RG"></label>
+        <label><span class="field-label">Órgão Emissor *</span><input class="field partner-issuer" type="text" required placeholder="Ex.: SSP/MG"></label>
+        <label class="md:col-span-2 lg:col-span-4"><span class="field-label">Endereço Residencial Completo *</span><textarea class="field min-h-20 resize-y partner-address" required placeholder="Rua, número, complemento, bairro, cidade/UF e CEP"></textarea></label>
+      </div>
+    </fieldset>
+  </template>
+
+  <script>
+    (() => {
+      'use strict';
+
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+
+      const FIXED = Object.freeze({
+        company: 'AUTCONTÁBIL ASSESSORIA LTDA',
+        cnpj: '22.867.591/0001-31',
+        address: 'Rua Mato Grosso, nº 70, Bairro Primavera, CEP 38612-116, Unaí/MG',
+        crc: '016534/O-5',
+        technician: 'WENIARLEI BOTELHO LUIZ BRANDÃO',
+        technicianCrc: '110687/O',
+        phone: '3832208670',
+        formattedPhone: '(38) 3220-8670',
+        email: 'autcontabil@gmail.com'
+      });
+
+      const LOGO_BASE64 = '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';
+
+      const form = document.getElementById('contract-form');
+      const partnersContainer = document.getElementById('partners-container');
+      const partnerTemplate = document.getElementById('partner-template');
+      const addPartnerButton = document.getElementById('add-partner');
+      const generateButton = document.getElementById('generate-button');
+      const buttonLabel = document.getElementById('button-label');
+      const buttonIcon = document.getElementById('button-icon');
+      const honorarioInput = document.getElementById('honorario');
+      const valorExtensoInput = document.getElementById('valor-extenso');
+      const dateInput = document.getElementById('data-assinatura');
+      const toast = document.getElementById('toast');
+      const pdfDropzone = document.getElementById('cnpj-pdf-dropzone');
+      const pdfInput = document.getElementById('cnpj-pdf-input');
+      const pdfStatus = document.getElementById('cnpj-pdf-status');
+      const pdfStatusIcon = document.getElementById('cnpj-pdf-status-icon');
+      const pdfStatusTitle = document.getElementById('cnpj-pdf-status-title');
+      const pdfStatusDetail = document.getElementById('cnpj-pdf-status-detail');
+
+      function digits(value) { return String(value || '').replace(/\D/g, ''); }
+      function maskCNPJ(value) {
+        return digits(value).slice(0, 14).replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+      }
+      function maskCPF(value) {
+        return digits(value).slice(0, 11).replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1-$2');
+      }
+      function parseCurrency(value) {
+        const clean = String(value || '').replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+        const number = Number(clean);
+        return Number.isFinite(number) ? number : 0;
+      }
+      function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+      }
+
+      const units = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+      const teens = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+      const tens = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+      const hundreds = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+      function groupToWords(number) {
+        if (number === 0) return '';
+        if (number === 100) return 'cem';
+        const parts = [];
+        const h = Math.floor(number / 100);
+        const rest = number % 100;
+        if (h) parts.push(hundreds[h]);
+        if (rest >= 10 && rest < 20) parts.push(teens[rest - 10]);
+        else {
+          const t = Math.floor(rest / 10);
+          const u = rest % 10;
+          if (t) parts.push(tens[t]);
+          if (u) parts.push(units[u]);
+        }
+        return parts.join(' e ');
+      }
+
+      function integerToWords(number) {
+        if (number === 0) return 'zero';
+        const scales = [
+          { value: 1000000000, singular: 'bilhão', plural: 'bilhões' },
+          { value: 1000000, singular: 'milhão', plural: 'milhões' },
+          { value: 1000, singular: 'mil', plural: 'mil' },
+          { value: 1, singular: '', plural: '' }
+        ];
+        const result = [];
+        let remainder = number;
+        scales.forEach((scale) => {
+          const group = Math.floor(remainder / scale.value);
+          if (!group) return;
+          remainder %= scale.value;
+          if (scale.value === 1000 && group === 1) result.push('mil');
+          else result.push(`${groupToWords(group)}${scale.singular ? ` ${group === 1 ? scale.singular : scale.plural}` : ''}`);
+        });
+        if (result.length <= 1) return result[0];
+        const last = result.pop();
+        return `${result.join(', ')}${remainder < 100 || remainder % 100 === 0 ? ' e ' : ', '}${last}`;
+      }
+
+      function moneyToWords(value) {
+        const rounded = Math.round(Math.max(0, value) * 100);
+        const reais = Math.floor(rounded / 100);
+        const cents = rounded % 100;
+        const parts = [];
+        if (reais) parts.push(`${integerToWords(reais)} ${reais === 1 ? 'real' : 'reais'}`);
+        if (cents) parts.push(`${integerToWords(cents)} ${cents === 1 ? 'centavo' : 'centavos'}`);
+        return parts.length ? parts.join(' e ') : 'zero reais';
+      }
+
+      function showToast(message, type = 'success') {
+        toast.textContent = message;
+        toast.className = `pointer-events-none fixed bottom-5 left-1/2 z-50 w-[min(92vw,520px)] -translate-x-1/2 rounded-xl border px-4 py-3 text-sm font-semibold shadow-2xl ${type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`;
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.add('hidden'), 5000);
+      }
+
+      function renumberPartners() {
+        const cards = [...partnersContainer.querySelectorAll('.partner-card')];
+        cards.forEach((card, index) => {
+          card.dataset.index = index;
+          card.querySelector('.partner-heading').textContent = `Sócio ${index + 1}`;
+          card.querySelector('.remove-partner').disabled = cards.length === 1;
+          card.querySelector('.remove-partner').classList.toggle('opacity-35', cards.length === 1);
+        });
+        updateReadiness();
+      }
+
+      function addPartner() {
+        const fragment = partnerTemplate.content.cloneNode(true);
+        const card = fragment.querySelector('.partner-card');
+        const cpfInput = card.querySelector('.partner-cpf');
+        cpfInput.addEventListener('input', () => { cpfInput.value = maskCPF(cpfInput.value); updateReadiness(); });
+        card.querySelector('.remove-partner').addEventListener('click', () => {
+          if (partnersContainer.children.length <= 1) return;
+          card.remove();
+          renumberPartners();
+        });
+        card.addEventListener('input', updateReadiness);
+        partnersContainer.appendChild(fragment);
+        renumberPartners();
+      }
+
+      function allRequiredFieldsFilled() {
+        return [...form.querySelectorAll('[required]')].every((field) => String(field.value).trim() !== '');
+      }
+
+      function updateReadiness() {
+        const ready = allRequiredFieldsFilled() && Boolean(window.docx);
+        const dot = document.getElementById('readiness-dot');
+        const title = document.getElementById('readiness-title');
+        const text = document.getElementById('readiness-text');
+        dot.className = `h-2.5 w-2.5 rounded-full ${ready ? 'bg-emerald-500' : 'bg-amber-400'}`;
+        title.textContent = ready ? 'Pronto para gerar' : 'Preenchimento pendente';
+        text.textContent = ready ? `${partnersContainer.children.length} representante(s) incluído(s). Revise e gere o Word.` : 'Complete os campos obrigatórios para gerar o documento.';
+      }
+
+      function getLocalTodayIso() {
+        const now = new Date();
+        const localTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+        return localTime.toISOString().slice(0, 10);
+      }
+
+      function syncAutomaticDate() {
+        dateInput.value = getLocalTodayIso();
+      }
+
+      function collectData() {
+        syncAutomaticDate();
+        const partners = [...partnersContainer.querySelectorAll('.partner-card')].map((card) => ({
+          name: card.querySelector('.partner-name').value.trim(),
+          nationality: card.querySelector('.partner-nationality').value.trim(),
+          civilStatus: card.querySelector('.partner-civil-status').value.trim(),
+          profession: card.querySelector('.partner-profession').value.trim(),
+          cpf: card.querySelector('.partner-cpf').value.trim(),
+          rg: card.querySelector('.partner-rg').value.trim(),
+          issuer: card.querySelector('.partner-issuer').value.trim(),
+          address: card.querySelector('.partner-address').value.trim()
+        }));
+        return {
+          company: document.getElementById('razao-social').value.trim(),
+          cnpj: document.getElementById('cnpj').value.trim(),
+          address: document.getElementById('endereco-empresa').value.trim(),
+          feeNumber: formatCurrency(parseCurrency(honorarioInput.value)),
+          feeWords: valorExtensoInput.value.trim(),
+          date: formatDate(dateInput.value),
+          partners
+        };
+      }
+
+      function formatDate(value) {
+        const [year, month, day] = value.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(date);
+      }
+
+      function base64ToBytes(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+      }
+
+      function setPdfStatus(state, title, detail = '') {
+        const icons = {
+          processing: '<span class="h-5 w-5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-700"></span>',
+          success: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>',
+          warning: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/></svg>',
+          error: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>'
+        };
+        pdfStatus.dataset.state = state;
+        pdfStatus.classList.remove('hidden');
+        pdfStatus.classList.add('flex');
+        pdfStatusIcon.innerHTML = icons[state] || icons.warning;
+        pdfStatusTitle.textContent = title;
+        pdfStatusDetail.textContent = detail;
+      }
+
+      function cleanPdfValue(value) {
+        return String(value || '')
+          .replace(/\u00a0/g, ' ')
+          .replace(/[\t ]+/g, ' ')
+          .replace(/\s*\n\s*/g, ' ')
+          .replace(/^[\s:;,.\-–—]+|[\s:;,.\-–—]+$/g, '')
+          .trim();
+      }
+
+      function extractPdfField(text, labelPattern, nextLabelPatterns, maxLength = 180) {
+        const nextLabels = nextLabelPatterns.join('|');
+        const expression = new RegExp(`(?:${labelPattern})\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\s*(?:${nextLabels})\\s*[:\\-]?|$)`, 'i');
+        const match = text.match(expression);
+        if (!match) return '';
+        const value = cleanPdfValue(match[1]);
+        return value.length <= maxLength ? value : '';
+      }
+
+      function isUsefulAddressPart(value) {
+        return Boolean(value) && !/^(?:\*+|N[ÃA]O\s+INFORMADO|SEM\s+COMPLEMENTO)$/i.test(value);
+      }
+
+      function extractCnpjCardData(rawText) {
+        const text = String(rawText || '')
+          .replace(/\u00a0/g, ' ')
+          .replace(/[\t ]+/g, ' ')
+          .replace(/\n{2,}/g, '\n')
+          .trim();
+        const cnpjMatch = text.match(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/);
+        const companyName = extractPdfField(
+          text,
+          'NOME\\s+EMPRESARIAL',
+          ['T[ÍI]TULO\\s+DO\\s+ESTABELECIMENTO', 'NOME\\s+DE\\s+FANTASIA', 'PORTE', 'C[ÓO]DIGO\\s+E\\s+DESCRI[ÇC][ÃA]O']
+        );
+
+        const addressStart = text.search(/\bLOGRADOURO\b/i);
+        const addressText = addressStart >= 0 ? text.slice(addressStart) : '';
+        const street = extractPdfField(addressText, 'LOGRADOURO', ['N[ÚU]MERO'], 160);
+        const number = extractPdfField(addressText, 'N[ÚU]MERO', ['COMPLEMENTO'], 40);
+        const complement = extractPdfField(addressText, 'COMPLEMENTO', ['CEP'], 120);
+        const cepField = extractPdfField(addressText, 'CEP', ['BAIRRO\\s*\\/\\s*DISTRITO'], 40);
+        const district = extractPdfField(addressText, 'BAIRRO\\s*\\/\\s*DISTRITO', ['MUNIC[ÍI]PIO'], 100);
+        const city = extractPdfField(addressText, 'MUNIC[ÍI]PIO', ['UF'], 100);
+        const ufField = extractPdfField(addressText, '\\bUF\\b', ['ENDERE[ÇC]O\\s+ELETR[ÔO]NICO', 'TELEFONE', 'ENTE\\s+FEDERATIVO', 'SITUA[ÇC][ÃA]O\\s+CADASTRAL'], 40);
+        const cepMatch = cepField.match(/\b\d{2}\.\d{3}-\d{3}\b/) || addressText.match(/\b\d{2}\.\d{3}-\d{3}\b/);
+        const ufMatch = ufField.match(/\b[A-Z]{2}\b/i);
+        const cityAndState = [city, ufMatch?.[0]?.toUpperCase()].filter(Boolean).join('/');
+        const address = [
+          street,
+          isUsefulAddressPart(number) ? `nº ${number}` : '',
+          isUsefulAddressPart(complement) ? complement : '',
+          isUsefulAddressPart(district) ? `Bairro ${district}` : '',
+          cityAndState,
+          cepMatch ? `CEP ${cepMatch[0]}` : ''
+        ].filter(Boolean).join(', ');
+
+        return { cnpj: cnpjMatch?.[0] || '', companyName, address };
+      }
+
+      async function extractTextFromPdf(file) {
+        if (typeof pdfjsLib === 'undefined') throw new Error('A biblioteca PDF.js não foi carregada. Verifique sua conexão e tente novamente.');
+        const fileData = new Uint8Array(await file.arrayBuffer());
+        const loadingTask = pdfjsLib.getDocument({ data: fileData });
+        const pdfDocument = await loadingTask.promise;
+        const pageTexts = [];
+        try {
+          for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+            const page = await pdfDocument.getPage(pageNumber);
+            const content = await page.getTextContent({ normalizeWhitespace: true });
+            const pageText = content.items
+              .map((item) => String(item.str || '').trim())
+              .filter(Boolean)
+              .join('\n');
+            pageTexts.push(pageText);
+          }
+        } finally {
+          await pdfDocument.destroy();
+        }
+        return pageTexts.join('\n');
+      }
+
+      function fillCompanyFieldsFromPdf(data) {
+        const companyInput = document.getElementById('razao-social');
+        const cnpjInput = document.getElementById('cnpj');
+        const addressInput = document.getElementById('endereco-empresa');
+        if (data.companyName) companyInput.value = data.companyName;
+        if (data.cnpj) cnpjInput.value = maskCNPJ(data.cnpj);
+        if (data.address) addressInput.value = data.address;
+        [companyInput, cnpjInput, addressInput].forEach((field) => {
+          field.removeAttribute('aria-invalid');
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      }
+
+      async function processCnpjPdf(file) {
+        if (!file) return;
+        if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) {
+          setPdfStatus('error', 'Arquivo inválido', 'Selecione um arquivo PDF do Cartão CNPJ.');
+          pdfInput.value = '';
+          return;
+        }
+        pdfInput.disabled = true;
+        pdfDropzone.setAttribute('aria-busy', 'true');
+        setPdfStatus('processing', 'Processando PDF...', file.name);
+        try {
+          const fullText = await extractTextFromPdf(file);
+          const extracted = extractCnpjCardData(fullText);
+          const foundFields = [extracted.companyName, extracted.cnpj, extracted.address].filter(Boolean).length;
+          if (!foundFields) throw new Error('Não foi possível localizar Razão Social, CNPJ ou endereço neste PDF.');
+          fillCompanyFieldsFromPdf(extracted);
+          if (foundFields === 3) {
+            setPdfStatus('success', 'Dados extraídos com sucesso!', `${file.name} — confira os campos abaixo antes de continuar.`);
+          } else {
+            setPdfStatus('warning', 'PDF lido parcialmente', `${file.name} — alguns dados não foram encontrados. Complete ou corrija os campos abaixo.`);
+          }
+        } catch (error) {
+          console.error('Erro ao ler o Cartão CNPJ:', error);
+          setPdfStatus('error', 'Erro ao ler PDF', error.message || 'Não foi possível processar o arquivo selecionado.');
+        } finally {
+          pdfInput.disabled = false;
+          pdfInput.value = '';
+          pdfDropzone.setAttribute('aria-busy', 'false');
+        }
+      }
+
+      function buildDocument(data) {
+        const {
+          Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, BorderStyle,
+          ImageRun, Table, TableRow, TableCell, WidthType, VerticalAlign, ShadingType, PageBreak
+        } = window.docx;
+
+        const noBorders = {
+          top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          bottom: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+        };
+        const run = (text, options = {}) => new TextRun({ text, font: 'Arial', size: options.size || 19, bold: options.bold, italics: options.italics, color: options.color || '202A35', break: options.break });
+        const body = (children, options = {}) => new Paragraph({
+          children: Array.isArray(children) ? children : [run(children)],
+          alignment: options.alignment || AlignmentType.JUSTIFIED,
+          indent: options.noIndent ? undefined : { firstLine: 709 },
+          spacing: { line: 240, after: options.after ?? 70, before: options.before || 0 },
+          keepNext: options.keepNext
+        });
+        const clause = (text) => new Paragraph({
+          children: [run(text, { bold: true, size: 21, color: '09294A' })],
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 100, after: 50, line: 240 },
+          keepNext: true
+        });
+        const title = (text) => new Paragraph({
+          children: [run(text, { bold: true, size: 24, color: '09294A' })],
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 80, after: 140 },
+          keepNext: true
+        });
+        const singleLine = (label, text) => body([run(label, { bold: true }), run(text)], { noIndent: true });
+        const paragraphUnique = (text) => body([run('Parágrafo único. ', { italics: true }), run(text)]);
+
+        const header = new Header({
+          children: [
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: noBorders,
+              rows: [new TableRow({ children: [
+                new TableCell({
+                  width: { size: 19, type: WidthType.PERCENTAGE },
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '09294A', type: ShadingType.CLEAR },
+                  margins: { top: 80, bottom: 80, left: 120, right: 80 },
+                  children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 0 }, children: [new ImageRun({ data: base64ToBytes(LOGO_BASE64), type: 'jpg', transformation: { width: 58, height: 58 }, altText: { title: 'AUTCONTÁBIL', description: 'Marca AUTCONTÁBIL', name: 'Logo AUTCONTÁBIL' } })] })]
+                }),
+                new TableCell({
+                  width: { size: 81, type: WidthType.PERCENTAGE },
+                  verticalAlign: VerticalAlign.CENTER,
+                  shading: { fill: '09294A', type: ShadingType.CLEAR },
+                  margins: { top: 80, bottom: 80, left: 160, right: 140 },
+                  children: [
+                    new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 30 }, children: [run(FIXED.company, { bold: true, size: 28, color: 'FFFFFF' })] }),
+                    new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 15 }, children: [run(`CNPJ: ${FIXED.cnpj}  |  CRC/MG: ${FIXED.crc}`, { size: 18, color: 'DFF5EE' })] }),
+                    new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 0 }, children: [run(`Rua Mato Grosso, 70 - Unaí/MG  |  Tel: ${FIXED.phone}  |  ${FIXED.email}`, { size: 17, color: 'E7EEF5' })] })
+                  ]
+                })
+              ] })]
+            }),
+            new Paragraph({ border: { bottom: { color: 'F47A20', style: BorderStyle.SINGLE, size: 12, space: 2 } }, spacing: { after: 50 }, children: [] })
+          ]
+        });
+
+        const footer = new Footer({
+          children: [new Paragraph({
+            border: { top: { color: '07866F', style: BorderStyle.SINGLE, size: 8, space: 5 } },
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 45, after: 0 },
+            children: [run(`Rua Mato Grosso, 70, Bairro Primavera, CEP 38612-116, Unaí/MG | Fone: ${FIXED.formattedPhone} | E-mail: ${FIXED.email}`, { size: 17, color: '475569' })]
+          })]
+        });
+
+        const partnerDescriptions = data.partners.map((partner, index) => body([
+          run(`${index + 1}. ${partner.name}`, { bold: true }),
+          run(`, ${partner.nationality}, ${partner.civilStatus}, ${partner.profession}, inscrito(a) no CPF nº ${partner.cpf}, RG nº ${partner.rg}, órgão emissor ${partner.issuer}, residente e domiciliado(a) na ${partner.address}${index === data.partners.length - 1 ? '.' : ';'}`)
+        ], { noIndent: true }));
+
+        function signatureCell(signature) {
+          if (!signature) {
+            return new TableCell({
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              borders: noBorders,
+              children: [new Paragraph({ children: [] })]
+            });
+          }
+          return new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            verticalAlign: VerticalAlign.BOTTOM,
+            borders: noBorders,
+            margins: { top: 0, bottom: 40, left: 140, right: 140 },
+            children: [
+              new Paragraph({
+                border: { bottom: { color: '334155', style: BorderStyle.SINGLE, size: 8, space: 1 } },
+                spacing: { before: 180, after: 40 },
+                keepNext: true,
+                children: [run(' ', { size: 2 })]
+              }),
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 20 },
+                children: [run(signature.name.toUpperCase(), { bold: true, size: 18 }), run(` (${signature.role})`, { size: 17 })]
+              })
+            ]
+          });
+        }
+
+        function signatureTable(signatures) {
+          const rows = [];
+          for (let index = 0; index < signatures.length; index += 2) {
+            rows.push(new TableRow({
+              cantSplit: true,
+              children: [signatureCell(signatures[index]), signatureCell(signatures[index + 1])]
+            }));
+          }
+          return new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: noBorders,
+            rows
+          });
+        }
+
+        const contractSignatures = [
+          { name: FIXED.company, role: 'CONTRATADA' },
+          ...data.partners.map((partner) => ({ name: partner.name, role: 'SÓCIO(A) / REPRESENTANTE' }))
+        ];
+        const powerSignatures = data.partners.map((partner) => ({ name: partner.name, role: 'OUTORGANTE / REPRESENTANTE' }));
+
+        const contractChildren = [
+          title('CONTRATO DE PRESTAÇÃO DE SERVIÇOS CONTÁBEIS'),
+          body('Pelo presente instrumento particular de Contrato de Prestação de Serviços Contábeis, de um lado:'),
+          singleLine('CONTRATADA: ', `${FIXED.company}, pessoa jurídica de direito privado, inscrita no CNPJ nº ${FIXED.cnpj}, com sede na ${FIXED.address}, inscrita no CRC/MG sob nº ${FIXED.crc}, neste ato representada por seu sócio e responsável técnico ${FIXED.technician}, brasileiro, contador, inscrito no CRC/MG sob nº ${FIXED.technicianCrc}.`),
+          body('e, de outro lado:', { noIndent: true }),
+          singleLine('CONTRATANTE: ', `${data.company}, inscrita no CNPJ nº ${data.cnpj}, com endereço na ${data.address}, neste ato representada por seu(s) sócio(s):`),
+          ...partnerDescriptions,
+          body('têm entre si justo e contratado o que segue, nos termos da Resolução CFC nº 1.590/2020 e demais normas aplicáveis.'),
+          clause('CLÁUSULA 1ª - DO OBJETO'),
+          body('O presente contrato tem por objeto a prestação de serviços contábeis, fiscais e de departamento pessoal, conforme especificado no Anexo I, observadas as normas brasileiras de contabilidade e a legislação vigente.'),
+          clause('CLÁUSULA 2ª - DAS OBRIGAÇÕES DA CONTRATANTE'),
+          body('É de responsabilidade exclusiva da CONTRATANTE fornecer, de forma completa, correta e tempestiva, todos os documentos, informações e dados necessários à execução dos serviços, inclusive certificado digital dentro da validade.'),
+          paragraphUnique('A CONTRATADA não se responsabiliza pela idoneidade, veracidade ou exatidão dos documentos e informações fornecidos pela CONTRATANTE.'),
+          clause('CLÁUSULA 3ª - DOS HONORÁRIOS'),
+          body(`Pelos serviços prestados, a CONTRATANTE pagará à CONTRATADA honorários mensais no valor de R$ ${data.feeNumber} (${data.feeWords}), com vencimento todo dia 10 de cada mês.`),
+          clause('CLÁUSULA 4ª - DOS SERVIÇOS NÃO INCLUSOS'),
+          body('Não estão incluídos nos honorários mensais os serviços extraordinários ou complementares, tais como: Imposto de Renda Pessoa Física, participação em licitações, defesas fiscais, recálculos decorrentes de informações retificadas, atendimentos extraordinários e outros serviços não previstos no objeto principal, os quais serão cobrados à parte, conforme tabela do sindicato da categoria ou orçamento específico.'),
+          clause('CLÁUSULA 5ª - DO REAJUSTE E DO REEQUILÍBRIO ECONÔMICO-FINANCEIRO'),
+          body('Os honorários poderão ser reajustados anualmente com base na variação do INPC acrescido de 3% (três por cento), ou por outro índice que venha a substituí-lo.'),
+          paragraphUnique('Os honorários poderão ser revistos a qualquer tempo caso haja aumento significativo da carga tributária, criação ou ampliação de obrigações acessórias, alterações legislativas ou normativas que impliquem aumento relevante no volume, complexidade ou responsabilidade dos serviços prestados, mediante comunicação prévia e justificativa técnica.'),
+          clause('CLÁUSULA 6ª - DA INADIMPLÊNCIA E SUSPENSÃO DOS SERVIÇOS'),
+          body('Em caso de atraso no pagamento, incidirá multa de 5% (cinco por cento) sobre o valor devido, acrescida de juros de 2% (dois por cento) ao mês.'),
+          paragraphUnique('Persistindo a inadimplência por prazo superior a 30 (trinta) dias, a CONTRATADA poderá suspender a prestação dos serviços, sem prejuízo da cobrança dos valores devidos.'),
+          clause('CLÁUSULA 7ª - DA FIDELIDADE CONTRATUAL'),
+          body('O presente contrato é celebrado com prazo mínimo de fidelidade de 12 (doze) meses, contados a partir da data de sua assinatura.'),
+          paragraphUnique('A rescisão imotivada por iniciativa da CONTRATANTE antes do término do prazo de fidelidade implicará no pagamento de multa compensatória equivalente a 30% do restante dos honorários à época da rescisão.'),
+          clause('CLÁUSULA 8ª - DA RESCISÃO APÓS A FIDELIDADE'),
+          body('Após o cumprimento do prazo mínimo de fidelidade, o contrato passará a vigorar por prazo indeterminado, podendo ser rescindido por qualquer das partes mediante aviso prévio de 30 (trinta) dias.'),
+          clause('CLÁUSULA 9ª - DA RESPONSABILIDADE'),
+          body('A CONTRATADA não se responsabiliza por multas, juros ou penalidades decorrentes do envio intempestivo, incorreto ou incompleto de informações por parte da CONTRATANTE.'),
+          paragraphUnique('A responsabilidade da CONTRATADA fica limitada ao valor total dos honorários pagos nos últimos 12 (doze) meses.'),
+          clause('CLÁUSULA 10ª - DA PROTEÇÃO DE DADOS (LGPD)'),
+          body('A CONTRATADA compromete-se a tratar os dados pessoais da CONTRATANTE em conformidade com a Lei nº 13.709/2018 (Lei Geral de Proteção de Dados - LGPD), observando os princípios da finalidade, adequação, segurança e confidencialidade.'),
+          clause('CLÁUSULA 11ª - DO FORO'),
+          body('Fica eleito o foro da Comarca de Unaí/MG para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.'),
+          body('E, por estarem justas e contratadas, as partes assinam o presente instrumento em duas vias de igual teor.'),
+          body(`Unaí/MG, ${data.date}.`, { noIndent: true, alignment: AlignmentType.RIGHT, before: 60 }),
+          signatureTable(contractSignatures),
+          new Paragraph({ children: [new PageBreak()] })
+        ];
+
+        const namesAndCpfs = data.partners.map((partner) => `${partner.name}, CPF nº ${partner.cpf}`).join('; ');
+        const powerChildren = [
+          title('PROCURAÇÃO'),
+          singleLine('OUTORGANTE: ', `${data.company}, portadora do CNPJ ${data.cnpj}, representada por seu(s) sócio(s) ${namesAndCpfs}, com endereço em ${data.address}.`),
+          singleLine('OUTORGADO: ', `${FIXED.company}, inscrita no CNPJ ${FIXED.cnpj}, registro CRC/MG ${FIXED.crc}, com endereço na Rua Mato Grosso, 70, Bairro Primavera, Unaí (MG).`),
+          singleLine('PODERES: ', `Representar o outorgante ${data.company}, CNPJ ${data.cnpj}, com o objetivo de tratar de qualquer assunto de seu interesse relativamente à Secretaria Estadual de Fazenda e Receita Federal do Brasil, podendo para tanto, prestar declarações; assinar requerimentos, petições e termo de responsabilidade e compromisso municipal, estadual e federal; solicitar a expedição de guias para pagamento e/ou retirá-las; tomar ciência de decisões e despachos; retirar documentos; apresentar impugnação a qualquer decisão; receber citações ou intimações e/ou dar-se por citado ou intimado perante a administração pública municipal, estadual e/ou federal.`),
+          body(`Unaí-MG, ${data.date}.`, { noIndent: true, alignment: AlignmentType.RIGHT, before: 80 }),
+          signatureTable(powerSignatures)
+        ];
+
+        const document = new Document({
+          creator: FIXED.company,
+          title: `Contrato de Prestação de Serviços Contábeis - ${data.company}`,
+          description: 'Contrato de prestação de serviços contábeis e procuração.',
+          styles: {
+            default: {
+              document: { run: { font: 'Arial', size: 19, color: '202A35' }, paragraph: { spacing: { line: 240, after: 70 } } }
+            }
+          },
+          sections: [{
+            properties: {
+              page: {
+                size: { width: 11906, height: 16838 },
+                margin: { top: 1417, right: 1417, bottom: 1417, left: 1417, header: 284, footer: 425 }
+              }
+            },
+            headers: { default: header },
+            footers: { default: footer },
+            children: [...contractChildren, ...powerChildren]
+          }]
+        });
+        return { document, Packer };
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }
+
+      function setGenerating(isGenerating) {
+        generateButton.disabled = isGenerating || !window.docx;
+        buttonLabel.textContent = isGenerating ? 'Gerando documento…' : 'Gerar e Baixar Contrato em Word (.docx)';
+        if (isGenerating) {
+          buttonIcon.classList.add('hidden');
+          const spinner = document.createElement('span');
+          spinner.id = 'button-spinner';
+          spinner.className = 'spinner';
+          generateButton.prepend(spinner);
+        } else {
+          document.getElementById('button-spinner')?.remove();
+          buttonIcon.classList.remove('hidden');
+        }
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        [...form.elements].forEach((field) => { if (field.matches?.('input, textarea, select')) field.setAttribute('aria-invalid', field.required && !String(field.value).trim() ? 'true' : 'false'); });
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          form.querySelector(':invalid')?.focus();
+          showToast('Preencha todos os campos obrigatórios antes de gerar o documento.', 'error');
+          return;
+        }
+        if (!window.docx) {
+          showToast('A biblioteca docx não está disponível. Verifique sua conexão.', 'error');
+          return;
+        }
+        try {
+          setGenerating(true);
+          const data = collectData();
+          const { document, Packer } = buildDocument(data);
+          const blob = await Packer.toBlob(document);
+          const safeName = data.company.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+          downloadBlob(blob, `contrato-contabil-${safeName || 'cliente'}.docx`);
+          showToast('Contrato e procuração gerados com sucesso. O download foi iniciado.');
+        } catch (error) {
+          console.error(error);
+          showToast('Não foi possível gerar o Word. Atualize a página e tente novamente.', 'error');
+        } finally {
+          setGenerating(false);
+        }
+      });
+
+      document.getElementById('cnpj').addEventListener('input', (event) => { event.target.value = maskCNPJ(event.target.value); updateReadiness(); });
+      pdfDropzone.addEventListener('click', () => pdfInput.click());
+      pdfDropzone.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          pdfInput.click();
+        }
+      });
+      pdfInput.addEventListener('change', () => processCnpjPdf(pdfInput.files?.[0]));
+      ['dragenter', 'dragover'].forEach((eventName) => {
+        pdfDropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          pdfDropzone.classList.add('is-dragging');
+        });
+      });
+      ['dragleave', 'dragend'].forEach((eventName) => {
+        pdfDropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          pdfDropzone.classList.remove('is-dragging');
+        });
+      });
+      pdfDropzone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        pdfDropzone.classList.remove('is-dragging');
+        processCnpjPdf(event.dataTransfer?.files?.[0]);
+      });
+      honorarioInput.addEventListener('input', () => {
+        const value = parseCurrency(honorarioInput.value);
+        if (value > 0) valorExtensoInput.value = moneyToWords(value);
+        updateReadiness();
+      });
+      honorarioInput.addEventListener('blur', () => {
+        const value = parseCurrency(honorarioInput.value);
+        if (value > 0) honorarioInput.value = formatCurrency(value);
+      });
+      form.addEventListener('input', (event) => {
+        if (event.target.matches('input, textarea, select')) event.target.removeAttribute('aria-invalid');
+        updateReadiness();
+      });
+      addPartnerButton.addEventListener('click', () => {
+        addPartner();
+        const lastCard = partnersContainer.lastElementChild;
+        lastCard?.querySelector('.partner-name')?.focus();
+        lastCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      syncAutomaticDate();
+      addPartner();
+      window.addEventListener('load', () => {
+        const pdfMissing = typeof pdfjsLib === 'undefined';
+        pdfDropzone.dataset.libraryReady = String(!pdfMissing);
+        if (pdfMissing) {
+          pdfDropzone.setAttribute('aria-disabled', 'true');
+          pdfInput.disabled = true;
+          setPdfStatus('error', 'Leitor de PDF indisponível', 'A biblioteca PDF.js não foi carregada. Verifique sua conexão e atualize a página.');
+        }
+        const missing = !window.docx;
+        document.getElementById('library-warning').classList.toggle('hidden', !missing);
+        generateButton.disabled = missing;
+        updateReadiness();
+      });
+    })();
+  </script>
+</body>
+</html>

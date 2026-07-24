@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a1220">
+  <title>Respostas rápidas</title>
+  <style>
+    :root {
+      --bg: #08111e;
+      --bg-deep: #050c16;
+      --surface: #111d2c;
+      --surface-strong: #162436;
+      --surface-soft: #0d1826;
+      --border: #2b3b50;
+      --border-strong: #3a4d66;
+      --text: #f4f7fb;
+      --muted: #a5b2c3;
+      --muted-strong: #cbd5e2;
+      --accent: #2f8cff;
+      --accent-strong: #1670e5;
+      --accent-soft: #102d4c;
+      --cyan: #67d2ff;
+      --danger: #ff5d68;
+      --danger-soft: #3b1820;
+      --success: #31d07d;
+      --success-soft: #0d3527;
+      --shadow: 0 22px 60px rgba(0, 0, 0, .28);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --focus: 0 0 0 4px rgba(47, 140, 255, .2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      background: var(--bg-deep);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(47, 140, 255, .09), transparent 25rem),
+        linear-gradient(160deg, var(--bg) 0%, var(--bg-deep) 100%);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-header {
+      border-bottom: 1px solid rgba(58, 77, 102, .6);
+      background: rgba(8, 17, 30, .82);
+      backdrop-filter: blur(14px);
+    }
+
+    .header-inner {
+      width: min(1464px, calc(100% - 72px));
+      margin-inline: auto;
+    }
+
+    .app-grid {
+      width: min(1496px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 118px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.65rem, 3vw, 2.2rem);
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+
+    .header-copy p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .98rem;
+    }
+
+    main {
+      padding: 28px 0 48px;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 480px) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(150deg, rgba(22, 36, 54, .96), rgba(13, 24, 38, .96));
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+
+    .composer {
+      position: sticky;
+      top: 24px;
+      min-height: calc(100vh - 182px);
+      padding: 28px;
+    }
+
+    .library {
+      min-height: calc(100vh - 182px);
+      padding: 28px;
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .panel-heading h2 {
+      font-size: 1.35rem;
+      line-height: 1.25;
+      letter-spacing: -.02em;
+    }
+
+    .panel-heading p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .message-count {
+      flex: 0 0 auto;
+      padding-top: 4px;
+      color: var(--muted-strong);
+      font-size: .9rem;
+      white-space: nowrap;
+    }
+
+    .form-group + .form-group {
+      margin-top: 20px;
+    }
+
+    label {
+      display: inline-block;
+      margin-bottom: 8px;
+      color: var(--muted-strong);
+      font-size: .91rem;
+      font-weight: 600;
+    }
+
+    .required {
+      color: var(--cyan);
+    }
+
+    input,
+    textarea {
+      display: block;
+      width: 100%;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      outline: none;
+      background: rgba(6, 14, 24, .58);
+      transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+    }
+
+    input {
+      min-height: 58px;
+      padding: 0 14px;
+    }
+
+    textarea {
+      min-height: 340px;
+      padding: 13px 14px;
+      line-height: 1.55;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #718096;
+    }
+
+    input:hover,
+    textarea:hover {
+      border-color: #506680;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      background: rgba(6, 14, 24, .78);
+      box-shadow: var(--focus);
+    }
+
+    .field-error {
+      display: none;
+      margin-top: 7px;
+      color: #ff9aa1;
+      font-size: .82rem;
+    }
+
+    .form-group.has-error input,
+    .form-group.has-error textarea {
+      border-color: var(--danger);
+    }
+
+    .form-group.has-error .field-error {
+      display: block;
+    }
+
+    .primary-button,
+    .copy-button,
+    .delete-button,
+    .clear-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 140ms ease, border-color 140ms ease, color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+    }
+
+    .primary-button {
+      width: 100%;
+      min-height: 66px;
+      margin-top: 24px;
+      color: white;
+      border: 1px solid #46a0ff;
+      background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+      box-shadow: 0 10px 24px rgba(22, 112, 229, .24), inset 0 1px 0 rgba(255, 255, 255, .2);
+    }
+
+    .primary-button:hover {
+      background: linear-gradient(180deg, #48a1ff, #1a78ed);
+      box-shadow: 0 13px 30px rgba(22, 112, 229, .33), inset 0 1px 0 rgba(255, 255, 255, .2);
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button svg {
+      width: 19px;
+      height: 19px;
+      flex: 0 0 auto;
+    }
+
+    .search-wrap {
+      position: relative;
+      margin-bottom: 22px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      left: 16px;
+      width: 21px;
+      height: 21px;
+      color: var(--muted);
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .search-wrap input {
+      min-height: 62px;
+      padding: 0 48px;
+      border-radius: 12px;
+      font-size: .96rem;
+    }
+
+    .clear-button {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0;
+      color: var(--muted);
+      border: 0;
+      background: transparent;
+      transform: translateY(-50%);
+    }
+
+    .clear-button:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .clear-button[hidden] {
+      display: none;
+    }
+
+    .message-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .message-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      min-height: 156px;
+      padding: 20px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: rgba(8, 17, 30, .42);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .015);
+      animation: card-in 220ms ease both;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .message-card:hover {
+      border-color: #49627f;
+      background: rgba(15, 28, 44, .72);
+      transform: translateY(-1px);
+    }
+
+    .message-main {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      gap: 15px;
+      align-items: start;
+      min-width: 0;
+    }
+
+    .message-icon {
+      display: grid;
+      width: 60px;
+      height: 60px;
+      place-items: center;
+      color: #9edbff;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #101e2f;
+    }
+
+    .message-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .message-title-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .message-title {
+      color: var(--text);
+      font-size: 1.14rem;
+      font-weight: 750;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .shortcut {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 2px 9px;
+      color: var(--cyan);
+      border: 1px solid #285270;
+      border-radius: 8px;
+      background: rgba(16, 45, 76, .7);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: .78rem;
+      line-height: 1;
+    }
+
+    .message-content {
+      display: -webkit-box;
+      margin-top: 8px;
+      color: var(--muted-strong);
+      font-size: .92rem;
+      line-height: 1.55;
+      white-space: pre-line;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .copy-button,
+    .delete-button {
+      min-height: 54px;
+      padding: 0 14px;
+      border: 1px solid;
+      background: transparent;
+      font-size: .95rem;
+    }
+
+    .copy-button {
+      min-width: 106px;
+      color: #cce5ff;
+      border-color: var(--accent);
+      background: rgba(47, 140, 255, .08);
+    }
+
+    .copy-button:hover {
+      color: white;
+      background: rgba(47, 140, 255, .17);
+      box-shadow: 0 8px 20px rgba(47, 140, 255, .13);
+      transform: translateY(-1px);
+    }
+
+    .copy-button.copied {
+      color: #83ecb3;
+      border-color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .delete-button {
+      color: #ff9ba2;
+      border-color: #7c3440;
+      background: rgba(255, 93, 104, .04);
+    }
+
+    .delete-button:hover {
+      color: white;
+      border-color: var(--danger);
+      background: var(--danger-soft);
+      transform: translateY(-1px);
+    }
+
+    .empty-state {
+      display: grid;
+      min-height: 320px;
+      padding: 38px 24px;
+      place-items: center;
+      text-align: center;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      background: rgba(8, 17, 30, .24);
+    }
+
+    .empty-icon {
+      display: grid;
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 17px;
+      place-items: center;
+      color: var(--cyan);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface-strong);
+    }
+
+    .empty-icon svg {
+      width: 29px;
+      height: 29px;
+    }
+
+    .empty-state h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .empty-state p {
+      max-width: 440px;
+      margin: 7px auto 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .toast-region {
+      position: fixed;
+      z-index: 20;
+      right: 20px;
+      bottom: 20px;
+      display: grid;
+      gap: 10px;
+      width: min(360px, calc(100% - 40px));
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 14px 16px;
+      color: var(--text);
+      border: 1px solid #31516b;
+      border-radius: 12px;
+      background: #132234;
+      box-shadow: 0 16px 34px rgba(0, 0, 0, .34);
+      animation: toast-in 220ms ease both;
+      font-size: .9rem;
+    }
+
+    .toast.success svg {
+      color: var(--success);
+    }
+
+    .toast.error {
+      border-color: #6f3540;
+    }
+
+    .toast.error svg {
+      color: var(--danger);
+    }
+
+    .toast svg {
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+      margin-top: 1px;
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1050px) {
+      .header-inner,
+      .app-grid {
+        width: min(100% - 32px, 840px);
+      }
+
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .composer {
+        position: static;
+        min-height: auto;
+      }
+
+      .library {
+        min-height: 520px;
+      }
+
+      textarea {
+        min-height: 140px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .header-inner {
+        min-height: 96px;
+      }
+
+      .header-copy p {
+        font-size: .88rem;
+      }
+
+      main {
+        padding: 18px 0 30px;
+      }
+
+      .header-inner,
+      .app-grid {
+        width: min(100% - 24px, 620px);
+      }
+
+      .app-grid {
+        gap: 14px;
+      }
+
+      .composer,
+      .library {
+        padding: 20px;
+        border-radius: 16px;
+      }
+
+      .library {
+        min-height: 440px;
+      }
+
+      .message-card {
+        grid-template-columns: 1fr;
+        gap: 17px;
+        min-height: 0;
+        padding: 17px;
+      }
+
+      .card-actions {
+        padding-left: 61px;
+      }
+
+      .copy-button,
+      .delete-button {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .panel-heading {
+        display: block;
+      }
+
+      .message-count {
+        display: block;
+        padding-top: 7px;
+      }
+
+      .message-main {
+        grid-template-columns: 38px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .message-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+      }
+
+      .message-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .card-actions {
+        padding-left: 0;
+      }
+
+      .copy-button,
+      .delete-button {
+        min-width: 0;
+        padding-inline: 11px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-copy">
+        <h1>Respostas rápidas</h1>
+        <p>Sua biblioteca de mensagens para atendimento</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="app-grid">
+      <section class="panel composer" aria-labelledby="composer-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="composer-title">Nova mensagem</h2>
+          </div>
+        </div>
+
+        <form id="message-form" novalidate>
+          <div class="form-group" data-field="title">
+            <label for="title">Título <span class="required" aria-hidden="true">*</span></label>
+            <input id="title" name="title" type="text" maxlength="80" autocomplete="off" placeholder="Ex: Saudação inicial" required>
+            <span class="field-error" id="title-error">Informe um título.</span>
+          </div>
+
+          <div class="form-group" data-field="shortcut">
+            <label for="shortcut">Abreviação / Atalho <span class="required" aria-hidden="true">*</span></label>
+            <input id="shortcut" name="shortcut" type="text" maxlength="30" autocomplete="off" spellcheck="false" placeholder="/oi" required>
+            <span class="field-error" id="shortcut-error">Informe um atalho.</span>
+          </div>
+
+          <div class="form-group" data-field="content">
+            <label for="content">Conteúdo da mensagem <span class="required" aria-hidden="true">*</span></label>
+            <textarea id="content" name="content" maxlength="2000" placeholder="Olá! Como posso ajudar você hoje?" required></textarea>
+            <span class="field-error" id="content-error">Escreva o conteúdo da mensagem.</span>
+          </div>
+
+          <button class="primary-button" type="submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+              <path d="M17 21v-8H7v8M7 3v5h8"/>
+            </svg>
+            Salvar mensagem
+          </button>
+        </form>
+      </section>
+
+      <section class="panel library" aria-labelledby="library-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="library-title">Mensagens salvas</h2>
+          </div>
+          <span class="message-count" id="message-count" aria-live="polite"></span>
+        </div>
+
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-4-4"/>
+          </svg>
+          <label for="search" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Buscar mensagens</label>
+          <input id="search" type="search" autocomplete="off" placeholder="Buscar por título, atalho ou conteúdo">
+          <button class="clear-button" id="clear-search" type="button" aria-label="Limpar busca" title="Limpar busca" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="m7 7 10 10M17 7 7 17"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="message-list" id="message-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEY = 'respostas-rapidas-mensagens-v1';
+      const demoMessages = [
+        {
+          id: 'demo-welcome',
+          title: 'Boas-vindas',
+          shortcut: '/oi',
+          content: 'Olá! 👋 Bem-vindo(a) ao nosso atendimento. Como posso ajudar você hoje?',
+          createdAt: 1
+        },
+        {
+          id: 'demo-deadline',
+          title: 'Prazo de retorno',
+          shortcut: '/prazo',
+          content: 'Nosso prazo de retorno é de até 24 horas úteis. Agradecemos pela sua paciência!',
+          createdAt: 2
+        }
+      ];
+
+      const icons = {
+        message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.5 9.5 0 0 1-4-.9L3 21l1.7-4.3A8.6 8.6 0 1 1 21 11.5Z"/></svg>',
+        copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="13" height="13" x="8" y="8" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
+        check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>',
+        trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 10v7M14 10v7"/></svg>',
+        search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+        alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>'
+      };
+
+      const form = document.querySelector('#message-form');
+      const titleInput = document.querySelector('#title');
+      const shortcutInput = document.querySelector('#shortcut');
+      const contentInput = document.querySelector('#content');
+      const searchInput = document.querySelector('#search');
+      const clearSearchButton = document.querySelector('#clear-search');
+      const messageList = document.querySelector('#message-list');
+      const messageCount = document.querySelector('#message-count');
+      const toastRegion = document.querySelector('#toast-region');
+
+      let messages = loadMessages();
+
+      function loadMessages() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored === null) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(demoMessages));
+            return [...demoMessages];
+          }
+
+          const parsed = JSON.parse(stored);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          showToast('Não foi possível acessar o armazenamento do navegador.', 'error');
+          return [];
+        }
+      }
+
+      function saveMessages() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+          return true;
+        } catch (error) {
+          showToast('Não foi possível salvar as alterações neste navegador.', 'error');
+          return false;
+        }
+      }
+
+      function normalize(value) {
+        return value
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLocaleLowerCase('pt-BR');
+      }
+
+      function filteredMessages() {
+        const query = normalize(searchInput.value.trim());
+        if (!query) return messages;
+
+        return messages.filter((message) => {
+          const haystack = normalize(`${message.title} ${message.shortcut} ${message.content}`);
+          return haystack.includes(query);
+        });
+      }
+
+      function pluralize(count, singular, plural) {
+        return `${count} ${count === 1 ? singular : plural}`;
+      }
+
+      function render() {
+        const visibleMessages = filteredMessages();
+        const hasQuery = searchInput.value.trim().length > 0;
+        messageList.replaceChildren();
+
+        messageCount.textContent = hasQuery
+          ? `${visibleMessages.length} de ${pluralize(messages.length, 'mensagem', 'mensagens')}`
+          : pluralize(messages.length, 'mensagem', 'mensagens');
+
+        clearSearchButton.hidden = !hasQuery;
+
+        if (visibleMessages.length === 0) {
+          messageList.append(createEmptyState(hasQuery));
+          return;
+        }
+
+        visibleMessages.forEach((message, index) => {
+          messageList.append(createMessageCard(message, index));
+        });
+      }
+
+      function createMessageCard(message, index) {
+        const article = document.createElement('article');
+        article.className = 'message-card';
+        article.style.animationDelay = `${Math.min(index * 35, 175)}ms`;
+        article.dataset.id = message.id;
+
+        const main = document.createElement('div');
+        main.className = 'message-main';
+
+        const icon = document.createElement('div');
+        icon.className = 'message-icon';
+        icon.innerHTML = icons.message;
+
+        const text = document.createElement('div');
+        const titleLine = document.createElement('div');
+        titleLine.className = 'message-title-line';
+
+        const title = document.createElement('span');
+        title.className = 'message-title';
+        title.textContent = message.title;
+
+        const shortcut = document.createElement('span');
+        shortcut.className = 'shortcut';
+        shortcut.textContent = message.shortcut;
+
+        const content = document.createElement('p');
+        content.className = 'message-content';
+        content.textContent = message.content;
+        content.title = message.content;
+
+        titleLine.append(title, shortcut);
+        text.append(titleLine, content);
+        main.append(icon, text);
+
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'copy-button';
+        copyButton.innerHTML = `${icons.copy}<span>Copiar</span>`;
+        copyButton.setAttribute('aria-label', `Copiar mensagem ${message.title}`);
+        copyButton.addEventListener('click', () => copyMessage(message, copyButton));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'delete-button';
+        deleteButton.innerHTML = `${icons.trash}<span>Excluir</span>`;
+        deleteButton.setAttribute('aria-label', `Excluir mensagem ${message.title}`);
+        deleteButton.addEventListener('click', () => deleteMessage(message));
+
+        actions.append(copyButton, deleteButton);
+        article.append(main, actions);
+        return article;
+      }
+
+      function createEmptyState(hasQuery) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+
+        const wrapper = document.createElement('div');
+        const icon = document.createElement('div');
+        icon.className = 'empty-icon';
+        icon.innerHTML = hasQuery ? icons.search : icons.message;
+
+        const heading = document.createElement('h3');
+        heading.textContent = hasQuery ? 'Nenhuma mensagem encontrada' : 'Sua biblioteca está vazia';
+
+        const description = document.createElement('p');
+        description.textContent = hasQuery
+          ? 'Tente buscar com outro título, atalho ou trecho da mensagem.'
+          : 'Cadastre sua primeira resposta no formulário para encontrá-la rapidamente depois.';
+
+        wrapper.append(icon, heading, description);
+        empty.append(wrapper);
+        return empty;
+      }
+
+      function validateForm() {
+        const values = {
+          title: titleInput.value.trim(),
+          shortcut: shortcutInput.value.trim(),
+          content: contentInput.value.trim()
+        };
+
+        let isValid = true;
+
+        Object.entries(values).forEach(([field, value]) => {
+          const group = form.querySelector(`[data-field="${field}"]`);
+          const input = form.elements[field];
+          const invalid = value.length === 0;
+          group.classList.toggle('has-error', invalid);
+          input.setAttribute('aria-invalid', String(invalid));
+          input.setAttribute('aria-describedby', invalid ? `${field}-error` : '');
+          if (invalid) isValid = false;
+        });
+
+        if (!isValid) {
+          form.querySelector('.has-error input, .has-error textarea')?.focus();
+        }
+
+        return { isValid, values };
+      }
+
+      function makeId() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          return window.crypto.randomUUID();
+        }
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function normalizeShortcut(value) {
+        const withoutSpaces = value.replace(/\s+/g, '-');
+        return withoutSpaces.startsWith('/') ? withoutSpaces : `/${withoutSpaces}`;
+      }
+
+      async function copyMessage(message, button) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(message.content);
+          } else {
+            fallbackCopy(message.content);
+          }
+
+          const original = button.innerHTML;
+          button.classList.add('copied');
+          button.innerHTML = `${icons.check}<span>Copiado!</span>`;
+          button.disabled = true;
+
+          window.setTimeout(() => {
+            if (!button.isConnected) return;
+            button.classList.remove('copied');
+            button.innerHTML = original;
+            button.disabled = false;
+          }, 1700);
+        } catch (error) {
+          showToast('Não foi possível copiar. Selecione o texto manualmente.', 'error');
+        }
+      }
+
+      function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.append(textarea);
+        textarea.select();
+        const copied = document.execCommand('copy');
+        textarea.remove();
+        if (!copied) throw new Error('copy failed');
+      }
+
+      function deleteMessage(message) {
+        const previous = messages;
+        messages = messages.filter((item) => item.id !== message.id);
+
+        if (!saveMessages()) {
+          messages = previous;
+          return;
+        }
+
+        render();
+        showToast('Mensagem excluída.', 'success');
+      }
+
+      function showToast(text, type = 'success') {
+        if (!toastRegion) return;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = type === 'error' ? icons.alert : icons.check;
+
+        const message = document.createElement('span');
+        message.textContent = text;
+        toast.append(message);
+        toastRegion.append(toast);
+
+        window.setTimeout(() => toast.remove(), 3000);
+      }
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const { isValid, values } = validateForm();
+        if (!isValid) return;
+
+        const shortcut = normalizeShortcut(values.shortcut);
+        const shortcutExists = messages.some(
+          (message) => normalize(message.shortcut) === normalize(shortcut)
+        );
+
+        if (shortcutExists) {
+          const group = form.querySelector('[data-field="shortcut"]');
+          group.classList.add('has-error');
+          document.querySelector('#shortcut-error').textContent = 'Este atalho já está em uso.';
+          shortcutInput.setAttribute('aria-invalid', 'true');
+          shortcutInput.setAttribute('aria-describedby', 'shortcut-error');
+          shortcutInput.focus();
+          return;
+        }
+
+        const newMessage = {
+          id: makeId(),
+          title: values.title,
+          shortcut,
+          content: values.content,
+          createdAt: Date.now()
+        };
+
+        messages = [newMessage, ...messages];
+        if (!saveMessages()) {
+          messages.shift();
+          return;
+        }
+
+        form.reset();
+        form.querySelectorAll('.has-error').forEach((group) => group.classList.remove('has-error'));
+        searchInput.value = '';
+        render();
+        titleInput.focus();
+        showToast('Mensagem salva com sucesso.', 'success');
+      });
+
+      [titleInput, shortcutInput, contentInput].forEach((input) => {
+        input.addEventListener('input', () => {
+          const group = input.closest('.form-group');
+          if (!group.classList.contains('has-error')) return;
+          group.classList.remove('has-error');
+          input.removeAttribute('aria-invalid');
+          input.removeAttribute('aria-describedby');
+          if (input === shortcutInput) {
+            document.querySelector('#shortcut-error').textContent = 'Informe um atalho.';
+          }
+        });
+      });
+
+      searchInput.addEventListener('input', render);
+      searchInput.addEventListener('keyup', render);
+
+      clearSearchButton.addEventListener('click', () => {
+        searchInput.value = '';
+        render();
+        searchInput.focus();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

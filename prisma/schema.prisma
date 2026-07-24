@@ -1,324 +1,83 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-enum SituacaoAlvara {
-  PRONTO
-  EM_ANDAMENTO
-  PENDENTE
-  NAO_APLICAVEL
-}
-
-enum TipoCliente {
-  FIXO
-  AVULSO
-  IRPF
-}
-
-enum RegimeTributario {
-  SIMPLES_NACIONAL
-  LUCRO_PRESUMIDO
-  LUCRO_REAL
-  MEI
-  ISENTO
-}
-
-enum Ranking {
-  C
-  B
-  A
-  S
-  SS
-}
-
-enum TipoVinculo {
-  SOCIO_EM_OUTRA_EMPRESA
-  VINCULO_DE_INTERESSE
-}
-
-enum TipoContatoEmpresa {
-  PRINCIPAL
-  SOCIETARIO
-  FISCAL
-  CONTABIL
-  DEPARTAMENTO_PESSOAL
-  FINANCEIRO
-  OUTRO
-}
-
-enum TitularCertificado {
-  PJ
-  PF
-}
-
-enum TipoCertificado {
-  A1
-  A3
-  NUVEM
-  OUTRO
-}
-
-enum TipoAlteracaoEmpresa {
-  ENDERECO
-  ATIVIDADES
-  RAZAO_SOCIAL
-  CAPITAL_SOCIAL
-  REGIME_TRIBUTARIO
-  CONTATOS
-  SOCIOS_ENTRADA
-  SOCIOS_SAIDA
-  SOCIOS_ENTRADA_E_SAIDA
-  SEM_ALTERACAO_SOCIOS
-  OUTRA
-}
-
-enum TipoDocumentoEmpresa {
-  CARTAO_CNPJ
-  CONTRATO_SOCIAL
-  ALTERACAO_CONTRATUAL
-  BIC
-  TEC
-  ALVARA
-  OUTRO
-}
-
-enum PapelUsuario {
-  ADMIN
-  OPERADOR
-  VISUALIZADOR
-}
-
-enum StatusEmpresa {
-  ATIVA
-  INATIVA
-}
-
-enum OrigemAlteracao {
-  MANUAL
-  AUTOMATICA
+generator client {
+  provider = "prisma-client-js"
 }
 
 model Empresa {
-  id                        String               @id @default(cuid())
-  razaoSocial               String
-  nomeFantasia              String
-  cnpj                      String               @unique
-  inscricaoEstadual         String?
-  inscricaoMunicipal        String?
-  dataAbertura              DateTime?
-  naturezaJuridica          String?
-  porte                     String?
-  nire                      String?
-  situacaoCadastral         String?
-  dataSituacaoCadastral     DateTime?
-  endereco                  String
-  numero                    String?
-  complemento               String?
-  bairro                    String?
-  cidade                    String
-  uf                        String               @db.Char(2)
-  cep                       String?
-  pontoReferencia           String?
-  email                     String?
-  telefone1                 String?
-  telefone2                 String?
-  capitalSocial             Decimal?             @db.Decimal(15, 2)
-  cnaePrincipal             String
-  cnaesSecundarios          String[]
-  ramoAtividade             String
-  servicoProduto            String
-  quantidadeFuncionarios    Int                  @default(0)
-  tempoEmpresa              String?
-  historicoAlteracoes       String[]
-  dataEntrada               DateTime
-  dataSaidaEscritorio       DateTime?
-  motivoSaidaEscritorio     String?
-  responsavelInterno        String?
-  responsavelAnterior       String?
-  situacaoAlvaras           SituacaoAlvara       @default(PENDENTE)
-  participaLicitacoes       Boolean              @default(false)
-  tipoCliente               TipoCliente          @default(FIXO)
-  regimeTributario          RegimeTributario
-  dataBaixa                 DateTime?
-  irpfSociosNaContabilidade Boolean              @default(false)
-  dataAtualizacaoBancaria   DateTime?
-  pendenciasFiscais         Boolean              @default(false)
-  ranking                   Ranking              @default(C)
-  observacoesInternas       String?
-  status                    StatusEmpresa        @default(ATIVA)
-  inativadaPor              Usuario?             @relation("EmpresaInativadaPor", fields: [inativadaPorId], references: [id], onDelete: SetNull)
-  inativadaPorId            String?
-  socios                    EmpresaSocio[]
-  vinculosRecebidos         SocioVinculo[]       @relation("EmpresaDestino")
-  contatos                  ContatoEmpresa[]
-  certificados              CertificadoDigital[]
-  alteracoes                AlteracaoEmpresa[]
-  documentos                DocumentoEmpresa[]
-  createdAt                 DateTime             @default(now())
-  updatedAt                 DateTime             @updatedAt
-
-  @@index([razaoSocial])
-  @@index([nomeFantasia])
-  @@index([status, dataEntrada])
-  @@index([inativadaPorId])
+  id                    String                @id @default(uuid())
+  razaoSocial           String
+  nomeFantasia          String?
+  cnpj                  String                @unique
+  tipoCliente           String?
+  regimeTributario      String
+  email                 String?
+  telefone              String?
+  cep                   String?
+  endereco              String?
+  cidade                String?
+  capitalSocial         Decimal?              @db.Decimal(12, 2)
+  dataInicio            DateTime
+  dataBaixa             DateTime?
+  socios                EmpresaSocio[]
+  alteracoesContratuais AlteracaoContratual[]
+  lancamentos           Lancamento[]
+  criadoEm              DateTime              @default(now())
+  atualizadoEm          DateTime              @updatedAt
 }
 
 model Socio {
-  id        String         @id @default(cuid())
-  nome      String
-  cpf       String         @unique
-  endereco  String
-  email     String?
-  telefone  String?
-  empresas  EmpresaSocio[]
-  vinculos  SocioVinculo[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id             String         @id @default(uuid())
+  nome           String
+  cpf            String         @unique
+  dataNascimento DateTime
+  email          String?
+  telefone       String?
+  empresas       EmpresaSocio[]
+  criadoEm       DateTime       @default(now())
+  atualizadoEm   DateTime       @updatedAt
 }
 
 model EmpresaSocio {
-  empresa       Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  empresaId     String
-  socio         Socio     @relation(fields: [socioId], references: [id], onDelete: Cascade)
-  socioId       String
-  participacao  Decimal?  @db.Decimal(5, 2)
-  cargo         String?
-  administrador Boolean   @default(false)
-  dataEntrada   DateTime?
-  dataSaida     DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  id                     String    @id @default(uuid())
+  empresaId              String
+  empresa                Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  socioId                String
+  socio                  Socio     @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  cargo                  String?
+  percentualParticipacao Decimal   @db.Decimal(5, 2)
+  recebeProlabore        Boolean   @default(false)
+  valorProlabore         Decimal?  @db.Decimal(10, 2)
+  dataEntrada            DateTime
+  dataSaida              DateTime?
 
-  @@id([empresaId, socioId])
+  @@unique([empresaId, socioId])
 }
 
-model ContatoEmpresa {
-  id          String             @id @default(cuid())
-  empresa     Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+model AlteracaoContratual {
+  id                String   @id @default(uuid())
+  empresaId         String
+  empresa           Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  numeroAlteracao   Int?
+  dataAlteracao     DateTime
+  descricaoResumida String?
+  criadoEm          DateTime @default(now())
+}
+
+model Lancamento {
+  id          String   @id @default(uuid())
   empresaId   String
-  nome        String
-  cargo       String?
-  tipo        TipoContatoEmpresa @default(PRINCIPAL)
-  telefone    String?
-  whatsapp    String?
-  email       String?
-  principal   Boolean            @default(false)
-  observacoes String?
-  ativo       Boolean            @default(true)
-  inativadoEm DateTime?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-
-  @@index([empresaId])
-  @@index([empresaId, ativo])
-}
-
-model CertificadoDigital {
-  id               String             @id @default(cuid())
-  empresa          Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  empresaId        String
-  titularTipo      TitularCertificado
-  titularNome      String?
-  titularDocumento String?
-  tipo             TipoCertificado?
-  emissora         String?
-  dataEmissao      DateTime?
-  dataVencimento   DateTime
-  revogadoEm       DateTime?
-  removidoEm       DateTime?
-  observacoes      String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-
-  @@index([empresaId, dataVencimento])
-  @@index([titularDocumento])
-  @@index([dataVencimento, removidoEm])
-}
-
-model AlteracaoEmpresa {
-  id          String               @id @default(cuid())
-  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  empresaId   String
-  data        DateTime
-  tipo        TipoAlteracaoEmpresa
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo        String
   descricao   String
-  observacoes String?
-  origem      OrigemAlteracao      @default(MANUAL)
-  usuario     Usuario?             @relation("AlteracaoAutor", fields: [usuarioId], references: [id], onDelete: SetNull)
-  usuarioId   String?
-  createdAt   DateTime             @default(now())
+  valor       Decimal  @db.Decimal(12, 2)
+  vencimento  DateTime
+  competencia DateTime
+  pago        Boolean  @default(false)
+  criadoEm    DateTime @default(now())
 
-  @@index([empresaId, data])
-  @@index([usuarioId, createdAt])
-}
-
-model DocumentoEmpresa {
-  id          String               @id @default(cuid())
-  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  empresaId   String
-  tipo        TipoDocumentoEmpresa
-  nomeArquivo String
-  mimeType    String
-  tamanho     Int
-  conteudo    Bytes
-  observacoes String?
-  removidoEm  DateTime?
-  createdAt   DateTime             @default(now())
-
-  @@index([empresaId, tipo])
-  @@index([empresaId, removidoEm])
-}
-
-model SocioVinculo {
-  id               String      @id @default(cuid())
-  socio            Socio       @relation(fields: [socioId], references: [id], onDelete: Cascade)
-  socioId          String
-  tipo             TipoVinculo
-  descricao        String
-  empresaDestino   Empresa?    @relation("EmpresaDestino", fields: [empresaDestinoId], references: [id], onDelete: SetNull)
-  empresaDestinoId String?
-  ativo            Boolean     @default(true)
-  createdAt        DateTime    @default(now())
-
-  @@index([socioId])
-  @@index([empresaDestinoId])
-}
-
-model Usuario {
-  id                 String             @id @default(cuid())
-  nome               String
-  email              String             @unique
-  senhaHash          String
-  papel              PapelUsuario       @default(VISUALIZADOR)
-  ativo              Boolean            @default(true)
-  deveTrocarSenha    Boolean            @default(true)
-  tentativasFalhas   Int                @default(0)
-  bloqueadoAte       DateTime?
-  ultimoAcessoEm     DateTime?
-  empresasInativadas Empresa[]          @relation("EmpresaInativadaPor")
-  alteracoes         AlteracaoEmpresa[] @relation("AlteracaoAutor")
-  auditorias         Auditoria[]        @relation("AuditoriaUsuario")
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-
-  @@index([ativo, papel])
-}
-
-model Auditoria {
-  id         String   @id @default(cuid())
-  usuario    Usuario? @relation("AuditoriaUsuario", fields: [usuarioId], references: [id], onDelete: SetNull)
-  usuarioId  String?
-  entidade   String
-  entidadeId String
-  acao       String
-  alteracoes Json?
-  createdAt  DateTime @default(now())
-
-  @@index([entidade, entidadeId, createdAt])
-  @@index([usuarioId, createdAt])
+  @@index([empresaId, competencia])
 }

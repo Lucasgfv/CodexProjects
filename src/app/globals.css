@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: #f7f8f5;
+  --surface: #ffffff;
+  --ink: #17201b;
+  --muted: #677069;
+  --line: #dce1dc;
+  --line-strong: #c8d0c9;
+  --moss: #345c45;
+  --moss-dark: #254534;
+  --sage: #7e9b86;
+  --sage-soft: #edf3ee;
+  --lavender: #a89acb;
+  --lavender-soft: #f2effa;
+  --coral: #e86d55;
+}
+
+* {
+  border-color: var(--line);
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--canvas);
+  color: var(--ink);
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 72% 12%, rgba(126, 155, 134, 0.07), transparent 28rem),
+    var(--canvas);
+  color: var(--ink);
+  font-family:
+    "Manrope",
+    "Segoe UI Variable",
+    "Segoe UI",
+    sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(126, 155, 134, 0.3);
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-[1480px] px-5 sm:px-8 lg:px-12;
+  }
+
+  .page-heading {
+    @apply text-[2rem] font-semibold leading-[1.08] tracking-[-0.035em] text-ink sm:text-[2.45rem];
+  }
+
+  .page-subtitle {
+    @apply mt-2 text-sm leading-6 text-[#667068] sm:text-[15px];
+  }
+
+  .section-rule {
+    @apply relative pl-5;
+  }
+
+  .section-rule::before {
+    background: var(--moss);
+    border-radius: 999px;
+    content: "";
+    height: 100%;
+    left: 0;
+    min-height: 36px;
+    position: absolute;
+    top: 0;
+    width: 3px;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold tracking-[-0.01em] text-[#313a34];
+  }
+
+  .field-control {
+    @apply h-11 w-full rounded-xl border border-[#d7ddd7] bg-white px-3.5 text-[13px] text-ink outline-none transition duration-200 placeholder:text-[#9aa29c] focus:border-moss focus:ring-4 focus:ring-[#345c4514] disabled:cursor-not-allowed disabled:bg-[#f1f3f0];
+  }
+
+  .field-textarea {
+    @apply min-h-24 w-full resize-y rounded-xl border border-[#d7ddd7] bg-white px-3.5 py-3 text-[13px] leading-5 text-ink outline-none transition duration-200 placeholder:text-[#9aa29c] focus:border-moss focus:ring-4 focus:ring-[#345c4514];
+  }
+
+  .primary-button {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-moss px-4 text-[13px] font-semibold text-white shadow-[0_7px_18px_rgba(52,92,69,0.18)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#294d39] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#345c4533] disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .secondary-button {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#cbd2cc] bg-white px-4 text-[13px] font-semibold text-ink transition duration-200 hover:border-[#aeb9b0] hover:bg-[#f8faf8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#345c451f] disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .icon-button {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-[#58635b] transition duration-200 hover:border-[#d7ddd7] hover:bg-white hover:text-moss focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#345c451f];
+  }
+
+  .data-table {
+    @apply w-full border-separate border-spacing-0 text-left;
+  }
+
+  .data-table th {
+    @apply border-b border-[#dfe3df] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.07em] text-[#657068];
+  }
+
+  .data-table td {
+    @apply border-b border-[#e5e8e5] px-4 py-4 text-[12px] text-[#354039];
+  }
+
+  .status-dot {
+    @apply inline-block h-2 w-2 rounded-full bg-[#2d7a4d];
+    box-shadow: 0 0 0 4px rgba(45, 122, 77, 0.09);
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .contract-sheet {
+    border: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 20mm !important;
+  }
+}

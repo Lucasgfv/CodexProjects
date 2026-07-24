@@ -1,134 +1,45 @@
-# AutCompany
+# Nexo Contábil
 
-Sistema interno para cadastrar, consultar, manter e imprimir fichas de empresas de um escritório contábil. O estado atual inclui autenticação, autorização por papéis, inativação sem perda de dados, auditoria técnica, controle de certificados e importação local do Cartão CNPJ.
+Aplicação local de gestão contábil modular construída com Next.js (App Router),
+TypeScript, Tailwind CSS, Prisma ORM, PostgreSQL e Recharts.
 
-Consulte o [histórico de desenvolvimento](./HISTORICO_DESENVOLVIMENTO.md) para ver, etapa a etapa, o que foi implementado, validado, diagnosticado e planejado. O [manual operacional](./MANUAL_REINICIALIZACAO.md) contém inicialização, backup, restauração e produção.
+## Executar
 
-## Funcionalidades e rotas
-
-- `/login`: acesso por e-mail e senha, sem cadastro público.
-- `/`: dashboard com empresas ativas por padrão, busca e indicadores do PostgreSQL.
-- `/empresas/nova`: cadastro com importação opcional de PDF, JPG ou PNG do Cartão CNPJ.
-- `/empresas/[id]`: central cadastral, sócios, contatos, certificados, histórico e documentos.
-- `/empresas/[id]/editar`: edição dos dados principais.
-- `/empresas/[id]/ficha`: ficha consolidada para desktop, celular e impressão A4.
-- `/certificados`: vencidos, próximos em até 30 dias e em dia; empresas inativas ficam ocultas por padrão.
-- `/usuarios`: contas e papéis, acessível somente a administradores.
-- `/auditoria`: trilha técnica imutável, acessível somente a administradores.
-- `/alterar-senha`: troca obrigatória da senha temporária.
-
-Papéis disponíveis:
-
-- `ADMIN`: cadastro empresarial, usuários e auditoria.
-- `OPERADOR`: cadastro e manutenção empresarial.
-- `VISUALIZADOR`: consulta e impressão, sem mutações.
-
-Usuários são bloqueados, não excluídos. Empresas, contatos, certificados e documentos usam inativação ou remoção lógica nos fluxos expostos pela aplicação.
-
-## Stack
-
-- Next.js 15, React 19 e TypeScript estrito;
-- Auth.js com sessão JWT e autorização também validada no servidor;
-- Prisma 6 e PostgreSQL 16;
-- OCR local com PDF.js, Tesseract.js e dados de idioma empacotados;
-- pnpm e Docker Compose.
-
-## Primeira execução com Docker
-
-1. Crie `.env` a partir de `.env.example` e gere um `AUTH_SECRET` exclusivo.
-2. Inicie os serviços:
-
-```powershell
-docker compose up --build -d
-docker compose ps
-```
-
-O serviço `migrate` executa `prisma migrate deploy` antes da aplicação. O fluxo normal não usa `prisma db push`.
-O Compose padrão é operacional: constrói a aplicação com `next build`, executa com `next start` e não monta o código-fonte do Windows. Assim, a navegação normal não recompila rotas nem depende do Watchpack.
-
-3. Crie o primeiro administrador uma única vez, sem colocar a senha no repositório:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-admin.ps1 -Email admin@dominio.local -Name "Administrador"
-```
-
-4. Abra `http://127.0.0.1:3000`, entre com a conta criada e troque a senha temporária.
-
-As portas locais são vinculadas somente a `127.0.0.1`: aplicação `3000`, PostgreSQL `5432` e pgAdmin `5050`. Use sempre `http://127.0.0.1:3000` nesse ambiente; `0.0.0.0` serve apenas para o processo escutar conexões e não deve aparecer em callbacks.
-
-Para desenvolvimento de código com atualização automática, use explicitamente o complemento opcional:
-
-```powershell
-docker compose -f compose.yml -f compose.dev.yml up --build -d
-```
-
-Esse modo é mais lento no Docker Desktop para Windows e não é indicado para o uso diário do sistema.
-
-## Execução local
-
-Com Node.js 22, pnpm e PostgreSQL acessível:
-
-```powershell
-pnpm install --frozen-lockfile
-pnpm db:deploy
+```bash
+pnpm install
+pnpm db:generate
 pnpm dev
 ```
 
-Use `pnpm db:seed` somente em banco de desenvolvimento vazio ou descartável. O seed não deve ser executado sobre dados reais sem revisão.
+Acesse `http://localhost:3000`.
 
-## Migrações e banco existente
+Sem `DATABASE_URL`, a aplicação inicia em **modo demonstração** com dados em
+memória, permitindo testar todos os fluxos da interface.
 
-O banco local analisado em 17/07/2026 foi copiado, restaurado, comparado com um banco vazio e conciliado. As cinco migrações atuais estão aplicadas e `prisma migrate status` está limpo.
+## Conectar ao PostgreSQL
 
-Para qualquer outro banco criado anteriormente por `db push`, não marque migrações como aplicadas por suposição. Faça backup restaurável, valide a restauração, compare os schemas e siga o procedimento de baseline do Prisma. Nunca use `prisma migrate reset`, `docker compose down -v` ou exclusão de banco com dados.
+1. Copie `.env.example` para `.env`.
+2. Ajuste `DATABASE_URL` para o banco local.
+3. Crie as tabelas e inicie o projeto:
 
-Em banco novo e vazio, use somente:
-
-```powershell
-pnpm db:deploy
+```bash
+pnpm db:push
+pnpm dev
 ```
 
-## Cartão CNPJ e OCR
+## Rotas
 
-O importador:
+- `/` — início, módulos e lembretes locais
+- `/dashboard` — indicadores, filtros e gráficos
+- `/db-admin` — CRUD de empresas, sócios, vínculos e alterações
+- `/apps/gerador-contratos` — preenchimento e impressão/PDF
+- `/apps/contabilidade` — entradas, saídas e vencimentos
+- `/apps` e `/app/apps` — hub de aplicações
 
-- lê diretamente PDFs com texto selecionável;
-- usa OCR local em PDFs digitalizados, JPG e PNG;
-- valida a assinatura real do arquivo e limita o tamanho a 5 MB;
-- preenche somente campos vazios;
-- suporta CNPJ numérico e alfanumérico;
-- exige que a pessoa revise os campos antes de salvar, com aviso especial para baixa confiança.
+## Validação
 
-Nenhuma API externa é utilizada. O arquivo do Cartão CNPJ existe somente em memória durante a leitura, o campo é limpo depois do processamento e nenhum byte desse cartão é armazenado. Contrato social, alterações, BIC, TEC, alvará e outros documentos anexados explicitamente continuam sendo armazenados no PostgreSQL.
-
-## Certificados
-
-Novos registros guardam somente empresa, titular `PJ`/`PF`, emissão e vencimento. Não são solicitados nem armazenados arquivo, senha, nome, CPF/CNPJ ou emissora. Dados legados continuam preservados. Uma renovação deve ser cadastrada como novo registro; o anterior permanece no histórico.
-
-## Backup e produção
-
-Crie backup local e externo com checksum:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\backup.ps1
-```
-
-Defina `AUTCOMPANY_BACKUP_EXTERNAL` para um NAS ou outro computador. O script mantém 30 cópias diárias e 12 semanais em cada destino. Valide periodicamente uma restauração isolada:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify-backup.ps1 -BackupPath .\backups\daily\arquivo.dump
-```
-
-O modelo de produção está em `compose.production.yml` e usa build fechado, `next start`, PostgreSQL sem porta publicada e HTTPS interno pelo Caddy. Antes do uso real, copie `.env.production.example`, defina host, segredos e destino externo e valide o certificado interno nos computadores clientes.
-
-## Verificação
-
-```powershell
-pnpm test
-pnpm test:ocr
-pnpm exec tsc --noEmit
+```bash
+pnpm typecheck
+pnpm lint
 pnpm build
-pnpm db:status
 ```
-
-O workflow `.github/workflows/verify.yml` repete migrações, testes, tipos e build em PostgreSQL isolado.
