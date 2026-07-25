@@ -5,6 +5,7 @@ import {
   mockLancamentos,
   mockSocios,
 } from "@/lib/mock-data";
+import { PersistenceUnavailableError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import type {
   DatabaseStatus,
@@ -60,8 +61,12 @@ function mapEmpresa(empresa: EmpresaRecord): EmpresaDTO {
     cep: empresa.cep,
     endereco: empresa.endereco,
     cidade: empresa.cidade,
+    uf: empresa.uf,
     capitalSocial: empresa.capitalSocial
       ? Number(empresa.capitalSocial)
+      : null,
+    honorarioMensal: empresa.honorarioMensal
+      ? Number(empresa.honorarioMensal)
       : null,
     dataInicio: empresa.dataInicio.toISOString(),
     dataBaixa: empresa.dataBaixa?.toISOString() ?? null,
@@ -70,6 +75,15 @@ function mapEmpresa(empresa: EmpresaRecord): EmpresaDTO {
       socioId: vinculo.socioId,
       nome: vinculo.socio.nome,
       cpf: vinculo.socio.cpf,
+      nacionalidade: vinculo.socio.nacionalidade,
+      estadoCivil: vinculo.socio.estadoCivil,
+      profissao: vinculo.socio.profissao,
+      rg: vinculo.socio.rg,
+      orgaoEmissor: vinculo.socio.orgaoEmissor,
+      cep: vinculo.socio.cep,
+      endereco: vinculo.socio.endereco,
+      cidade: vinculo.socio.cidade,
+      uf: vinculo.socio.uf,
       cargo: vinculo.cargo,
       percentualParticipacao: Number(vinculo.percentualParticipacao),
       recebeProlabore: vinculo.recebeProlabore,
@@ -102,10 +116,15 @@ function empresaData(input: EmpresaInput) {
     cep: input.cep || null,
     endereco: input.endereco || null,
     cidade: input.cidade || null,
+    uf: input.uf || null,
     capitalSocial:
       input.capitalSocial === null
         ? null
         : new Prisma.Decimal(input.capitalSocial),
+    honorarioMensal:
+      input.honorarioMensal === null
+        ? null
+        : new Prisma.Decimal(input.honorarioMensal),
     dataInicio: new Date(input.dataInicio),
     dataBaixa: input.dataBaixa ? new Date(input.dataBaixa) : null,
   };
@@ -116,7 +135,7 @@ export async function getDatabaseStatus(): Promise<DatabaseStatus> {
     return {
       connected: false,
       mode: "demo",
-      label: "Modo demonstração",
+      label: "Modo demonstração — somente leitura",
     };
   }
 
@@ -137,7 +156,7 @@ export async function getDatabaseStatus(): Promise<DatabaseStatus> {
     return {
       connected: false,
       mode: "demo",
-      label: "Indisponível",
+      label: "Indisponível — somente leitura",
     };
   }
 }
@@ -174,37 +193,7 @@ export async function createEmpresa(
   input: EmpresaInput,
 ): Promise<EmpresaDTO> {
   if (!hasDatabaseUrl()) {
-    const id = crypto.randomUUID();
-    const empresa: EmpresaDTO = {
-      id,
-      ...input,
-      socios: (input.sociosVinculados ?? []).map((vinculo) => {
-        const socio = demoStore.socios.find(
-          (item) => item.id === vinculo.socioId,
-        );
-        return {
-          id: crypto.randomUUID(),
-          socioId: vinculo.socioId,
-          nome: socio?.nome ?? "Sócio",
-          cpf: socio?.cpf ?? "",
-          cargo: vinculo.cargo ?? null,
-          percentualParticipacao: vinculo.percentualParticipacao,
-          recebeProlabore: vinculo.recebeProlabore,
-          valorProlabore: vinculo.valorProlabore ?? null,
-          dataEntrada: vinculo.dataEntrada,
-          dataSaida: vinculo.dataSaida ?? null,
-        };
-      }),
-      alteracoesContratuais: (input.alteracoes ?? []).map((alteracao) => ({
-        id: crypto.randomUUID(),
-        numeroAlteracao: alteracao.numeroAlteracao ?? null,
-        dataAlteracao: alteracao.dataAlteracao,
-        descricaoResumida: alteracao.descricaoResumida ?? null,
-      })),
-    };
-    demoStore.empresas.unshift(empresa);
-    syncDemoSocioCounts();
-    return structuredClone(empresa);
+    throw new PersistenceUnavailableError();
   }
 
   const empresa = await prisma.empresa.create({
@@ -248,12 +237,7 @@ export async function updateEmpresa(
   input: EmpresaInput,
 ): Promise<EmpresaDTO> {
   if (!hasDatabaseUrl()) {
-    const index = demoStore.empresas.findIndex((empresa) => empresa.id === id);
-    if (index < 0) throw new Error("Empresa não encontrada.");
-    const replacement = await buildDemoEmpresa(id, input);
-    demoStore.empresas[index] = replacement;
-    syncDemoSocioCounts();
-    return structuredClone(replacement);
+    throw new PersistenceUnavailableError();
   }
 
   await prisma.$transaction(async (tx) => {
@@ -304,61 +288,9 @@ export async function updateEmpresa(
   return mapEmpresa(empresa);
 }
 
-async function buildDemoEmpresa(
-  id: string,
-  input: EmpresaInput,
-): Promise<EmpresaDTO> {
-  return {
-    id,
-    razaoSocial: input.razaoSocial,
-    nomeFantasia: input.nomeFantasia,
-    cnpj: input.cnpj,
-    tipoCliente: input.tipoCliente,
-    regimeTributario: input.regimeTributario,
-    email: input.email,
-    telefone: input.telefone,
-    cep: input.cep,
-    endereco: input.endereco,
-    cidade: input.cidade,
-    capitalSocial: input.capitalSocial,
-    dataInicio: input.dataInicio,
-    dataBaixa: input.dataBaixa,
-    socios: (input.sociosVinculados ?? []).map((vinculo) => {
-      const socio = demoStore.socios.find(
-        (item) => item.id === vinculo.socioId,
-      );
-      return {
-        id: crypto.randomUUID(),
-        socioId: vinculo.socioId,
-        nome: socio?.nome ?? "Sócio",
-        cpf: socio?.cpf ?? "",
-        cargo: vinculo.cargo ?? null,
-        percentualParticipacao: vinculo.percentualParticipacao,
-        recebeProlabore: vinculo.recebeProlabore,
-        valorProlabore: vinculo.valorProlabore ?? null,
-        dataEntrada: vinculo.dataEntrada,
-        dataSaida: vinculo.dataSaida ?? null,
-      };
-    }),
-    alteracoesContratuais: (input.alteracoes ?? []).map((alteracao) => ({
-      id: crypto.randomUUID(),
-      numeroAlteracao: alteracao.numeroAlteracao ?? null,
-      dataAlteracao: alteracao.dataAlteracao,
-      descricaoResumida: alteracao.descricaoResumida ?? null,
-    })),
-  };
-}
-
 export async function deleteEmpresa(id: string) {
   if (!hasDatabaseUrl()) {
-    demoStore.empresas = demoStore.empresas.filter(
-      (empresa) => empresa.id !== id,
-    );
-    demoStore.lancamentos = demoStore.lancamentos.filter(
-      (lancamento) => lancamento.empresaId !== id,
-    );
-    syncDemoSocioCounts();
-    return;
+    throw new PersistenceUnavailableError();
   }
   await prisma.empresa.delete({ where: { id } });
 }
@@ -378,19 +310,22 @@ export async function listSocios(): Promise<SocioDTO[]> {
     dataNascimento: socio.dataNascimento.toISOString(),
     email: socio.email,
     telefone: socio.telefone,
+    nacionalidade: socio.nacionalidade,
+    estadoCivil: socio.estadoCivil,
+    profissao: socio.profissao,
+    rg: socio.rg,
+    orgaoEmissor: socio.orgaoEmissor,
+    cep: socio.cep,
+    endereco: socio.endereco,
+    cidade: socio.cidade,
+    uf: socio.uf,
     totalEmpresas: socio._count.empresas,
   }));
 }
 
 export async function createSocio(input: SocioInput): Promise<SocioDTO> {
   if (!hasDatabaseUrl()) {
-    const socio: SocioDTO = {
-      id: crypto.randomUUID(),
-      ...input,
-      totalEmpresas: 0,
-    };
-    demoStore.socios.unshift(socio);
-    return structuredClone(socio);
+    throw new PersistenceUnavailableError();
   }
 
   const socio = await prisma.socio.create({
@@ -400,10 +335,23 @@ export async function createSocio(input: SocioInput): Promise<SocioDTO> {
       dataNascimento: new Date(input.dataNascimento),
       email: input.email || null,
       telefone: input.telefone || null,
+      nacionalidade: input.nacionalidade || null,
+      estadoCivil: input.estadoCivil || null,
+      profissao: input.profissao || null,
+      rg: input.rg || null,
+      orgaoEmissor: input.orgaoEmissor || null,
+      cep: input.cep || null,
+      endereco: input.endereco || null,
+      cidade: input.cidade || null,
+      uf: input.uf || null,
     },
   });
 
-  return { ...socio, dataNascimento: socio.dataNascimento.toISOString(), totalEmpresas: 0 };
+  return {
+    ...socio,
+    dataNascimento: socio.dataNascimento.toISOString(),
+    totalEmpresas: 0,
+  };
 }
 
 export async function updateSocio(
@@ -411,22 +359,7 @@ export async function updateSocio(
   input: SocioInput,
 ): Promise<SocioDTO> {
   if (!hasDatabaseUrl()) {
-    const index = demoStore.socios.findIndex((socio) => socio.id === id);
-    if (index < 0) throw new Error("Sócio não encontrado.");
-    demoStore.socios[index] = {
-      id,
-      ...input,
-      totalEmpresas: demoStore.socios[index].totalEmpresas,
-    };
-    demoStore.empresas = demoStore.empresas.map((empresa) => ({
-      ...empresa,
-      socios: empresa.socios.map((vinculo) =>
-        vinculo.socioId === id
-          ? { ...vinculo, nome: input.nome, cpf: input.cpf }
-          : vinculo,
-      ),
-    }));
-    return structuredClone(demoStore.socios[index]);
+    throw new PersistenceUnavailableError();
   }
 
   const socio = await prisma.socio.update({
@@ -437,6 +370,15 @@ export async function updateSocio(
       dataNascimento: new Date(input.dataNascimento),
       email: input.email || null,
       telefone: input.telefone || null,
+      nacionalidade: input.nacionalidade || null,
+      estadoCivil: input.estadoCivil || null,
+      profissao: input.profissao || null,
+      rg: input.rg || null,
+      orgaoEmissor: input.orgaoEmissor || null,
+      cep: input.cep || null,
+      endereco: input.endereco || null,
+      cidade: input.cidade || null,
+      uf: input.uf || null,
     },
     include: { _count: { select: { empresas: true } } },
   });
@@ -448,30 +390,24 @@ export async function updateSocio(
     dataNascimento: socio.dataNascimento.toISOString(),
     email: socio.email,
     telefone: socio.telefone,
+    nacionalidade: socio.nacionalidade,
+    estadoCivil: socio.estadoCivil,
+    profissao: socio.profissao,
+    rg: socio.rg,
+    orgaoEmissor: socio.orgaoEmissor,
+    cep: socio.cep,
+    endereco: socio.endereco,
+    cidade: socio.cidade,
+    uf: socio.uf,
     totalEmpresas: socio._count.empresas,
   };
 }
 
 export async function deleteSocio(id: string) {
   if (!hasDatabaseUrl()) {
-    demoStore.socios = demoStore.socios.filter((socio) => socio.id !== id);
-    demoStore.empresas = demoStore.empresas.map((empresa) => ({
-      ...empresa,
-      socios: empresa.socios.filter((vinculo) => vinculo.socioId !== id),
-    }));
-    syncDemoSocioCounts();
-    return;
+    throw new PersistenceUnavailableError();
   }
   await prisma.socio.delete({ where: { id } });
-}
-
-function syncDemoSocioCounts() {
-  demoStore.socios = demoStore.socios.map((socio) => ({
-    ...socio,
-    totalEmpresas: demoStore.empresas.filter((empresa) =>
-      empresa.socios.some((vinculo) => vinculo.socioId === socio.id),
-    ).length,
-  }));
 }
 
 export async function listLancamentos(): Promise<LancamentoDTO[]> {
@@ -504,17 +440,7 @@ export async function createLancamento(
   input: LancamentoInput,
 ): Promise<LancamentoDTO> {
   if (!hasDatabaseUrl()) {
-    const empresa = demoStore.empresas.find(
-      (item) => item.id === input.empresaId,
-    );
-    if (!empresa) throw new Error("Empresa não encontrada.");
-    const lancamento: LancamentoDTO = {
-      id: crypto.randomUUID(),
-      ...input,
-      empresaNome: empresa.nomeFantasia ?? empresa.razaoSocial,
-    };
-    demoStore.lancamentos.unshift(lancamento);
-    return structuredClone(lancamento);
+    throw new PersistenceUnavailableError();
   }
 
   const lancamento = await prisma.lancamento.create({

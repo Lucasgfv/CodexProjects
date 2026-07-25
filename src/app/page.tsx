@@ -2,7 +2,9 @@ import {
   ArrowRight,
   BarChart3,
   Calculator,
+  FileCheck2,
   FileSignature,
+  MessagesSquare,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +26,20 @@ const modules = [
     description: "Lançamentos, apurações e obrigações.",
     href: "/apps/contabilidade",
     icon: Calculator,
+    tone: "sage",
+  },
+  {
+    title: "Contrato de prestação de serviços",
+    description: "Gere contrato e procuração com os dados cadastrados.",
+    href: "/apps/contrato-prestacao-servicos",
+    icon: FileCheck2,
+    tone: "moss",
+  },
+  {
+    title: "Respostas rápidas",
+    description: "Encontre e copie mensagens usadas no atendimento.",
+    href: "/apps/respostas-rapidas",
+    icon: MessagesSquare,
     tone: "sage",
   },
   {

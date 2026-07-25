@@ -8,12 +8,21 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "db:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-local-env.ps1",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
     "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-backup.ps1",
+    "db:restore": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-restore.ps1"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
+    "docx": "9.7.1",
     "lucide-react": "^0.468.0",
     "next": "^15.4.4",
     "react": "^19.1.0",

@@ -6,6 +6,7 @@ import {
 } from "@/lib/repository";
 import {
   getErrorMessage,
+  getErrorStatus,
   lancamentoInputSchema,
 } from "@/lib/validation";
 
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }

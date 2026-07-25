@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { createSocio, listSocios } from "@/lib/repository";
-import { getErrorMessage, socioInputSchema } from "@/lib/validation";
+import {
+  getErrorMessage,
+  getErrorStatus,
+  socioInputSchema,
+} from "@/lib/validation";
 
 export async function GET() {
   try {
@@ -21,7 +25,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }

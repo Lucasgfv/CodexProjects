@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { createEmpresa, listEmpresas } from "@/lib/repository";
-import { empresaInputSchema, getErrorMessage } from "@/lib/validation";
+import {
+  empresaInputSchema,
+  getErrorMessage,
+  getErrorStatus,
+} from "@/lib/validation";
 
 export async function GET() {
   try {
@@ -22,7 +26,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }

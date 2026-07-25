@@ -26,7 +26,7 @@ export function DatabaseStatus() {
         setStatus({
           connected: false,
           mode: "demo",
-          label: "Modo demonstração",
+          label: "Modo demonstração — somente leitura",
         }),
       );
 
@@ -50,7 +50,7 @@ export function DatabaseStatus() {
         </span>
         {status.mode === "demo" && status.label !== "Verificando" ? (
           <span className="hidden text-[#8a928d] sm:inline">
-            — defina DATABASE_URL para usar PostgreSQL
+            — conecte o PostgreSQL para salvar alterações
           </span>
         ) : null}
       </div>

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { PersistenceUnavailableError } from "@/lib/errors";
+
 const nullableText = z
   .string()
   .trim()
@@ -24,7 +26,9 @@ export const empresaInputSchema = z.object({
   cep: nullableText,
   endereco: nullableText,
   cidade: nullableText,
+  uf: nullableText.transform((value) => value?.toUpperCase() ?? null),
   capitalSocial: nullableNumber,
+  honorarioMensal: nullableNumber,
   dataInicio: z.string().min(8, "Informe a data de início."),
   dataBaixa: nullableText,
   sociosVinculados: z
@@ -59,6 +63,15 @@ export const socioInputSchema = z.object({
   dataNascimento: z.string().min(8, "Informe a data de nascimento."),
   email: nullableText,
   telefone: nullableText,
+  nacionalidade: nullableText,
+  estadoCivil: nullableText,
+  profissao: nullableText,
+  rg: nullableText,
+  orgaoEmissor: nullableText,
+  cep: nullableText,
+  endereco: nullableText,
+  cidade: nullableText,
+  uf: nullableText.transform((value) => value?.toUpperCase() ?? null),
 });
 
 export const lancamentoInputSchema = z.object({
@@ -72,9 +85,29 @@ export const lancamentoInputSchema = z.object({
 });
 
 export function getErrorMessage(error: unknown) {
+  if (isDatabaseConnectionError(error)) {
+    return "PostgreSQL indisponível. Verifique o Docker e tente novamente.";
+  }
   if (error instanceof z.ZodError) {
     return error.issues[0]?.message ?? "Revise os dados informados.";
   }
   if (error instanceof Error) return error.message;
   return "Não foi possível concluir a operação.";
+}
+
+export function getErrorStatus(error: unknown) {
+  return error instanceof PersistenceUnavailableError ||
+    isDatabaseConnectionError(error)
+    ? 503
+    : 400;
+}
+
+function isDatabaseConnectionError(error: unknown) {
+  return (
+    error instanceof Error &&
+    (error.name === "PrismaClientInitializationError" ||
+      error.message.includes("Can't reach database server") ||
+      error.message.includes("P1001") ||
+      error.message.includes("P1002"))
+  );
 }

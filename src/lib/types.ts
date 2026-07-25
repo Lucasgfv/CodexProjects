@@ -3,6 +3,15 @@ export type EmpresaSocioDTO = {
   socioId: string;
   nome: string;
   cpf: string;
+  nacionalidade: string | null;
+  estadoCivil: string | null;
+  profissao: string | null;
+  rg: string | null;
+  orgaoEmissor: string | null;
+  cep: string | null;
+  endereco: string | null;
+  cidade: string | null;
+  uf: string | null;
   cargo: string | null;
   percentualParticipacao: number;
   recebeProlabore: boolean;
@@ -30,7 +39,9 @@ export type EmpresaDTO = {
   cep: string | null;
   endereco: string | null;
   cidade: string | null;
+  uf: string | null;
   capitalSocial: number | null;
+  honorarioMensal: number | null;
   dataInicio: string;
   dataBaixa: string | null;
   socios: EmpresaSocioDTO[];
@@ -44,6 +55,15 @@ export type SocioDTO = {
   dataNascimento: string;
   email: string | null;
   telefone: string | null;
+  nacionalidade: string | null;
+  estadoCivil: string | null;
+  profissao: string | null;
+  rg: string | null;
+  orgaoEmissor: string | null;
+  cep: string | null;
+  endereco: string | null;
+  cidade: string | null;
+  uf: string | null;
   totalEmpresas: number;
 };
 

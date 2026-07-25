@@ -50,7 +50,9 @@ type EmpresaForm = {
   cep: string;
   endereco: string;
   cidade: string;
+  uf: string;
   capitalSocial: string;
+  honorarioMensal: string;
   dataInicio: string;
   dataBaixa: string;
   socios: LinkForm[];
@@ -76,7 +78,9 @@ function emptyForm(): EmpresaForm {
     cep: "",
     endereco: "",
     cidade: "",
+    uf: "",
     capitalSocial: "",
+    honorarioMensal: "",
     dataInicio: new Date().toISOString().slice(0, 10),
     dataBaixa: "",
     socios: [],
@@ -97,7 +101,9 @@ function toForm(empresa?: EmpresaDTO | null): EmpresaForm {
     cep: empresa.cep ?? "",
     endereco: empresa.endereco ?? "",
     cidade: empresa.cidade ?? "",
+    uf: empresa.uf ?? "",
     capitalSocial: empresa.capitalSocial?.toString() ?? "",
+    honorarioMensal: empresa.honorarioMensal?.toString() ?? "",
     dataInicio: toInputDate(empresa.dataInicio),
     dataBaixa: toInputDate(empresa.dataBaixa),
     socios: empresa.socios.map((vinculo) => ({
@@ -248,8 +254,12 @@ export function EmpresaDrawer({
       cep: form.cep || null,
       endereco: form.endereco || null,
       cidade: form.cidade || null,
+      uf: form.uf.trim().toUpperCase() || null,
       capitalSocial: form.capitalSocial
         ? Number(form.capitalSocial.replace(",", "."))
+        : null,
+      honorarioMensal: form.honorarioMensal
+        ? Number(form.honorarioMensal.replace(",", "."))
         : null,
       dataInicio: form.dataInicio,
       dataBaixa: form.dataBaixa || null,
@@ -416,6 +426,16 @@ export function EmpresaDrawer({
               value={form.cidade}
             />
           </FormField>
+          <FormField label="UF">
+            <input
+              className="field-control uppercase"
+              maxLength={2}
+              name="uf"
+              onChange={updateField}
+              placeholder="MG"
+              value={form.uf}
+            />
+          </FormField>
           <FormField label="Capital social (R$)">
             <input
               className="field-control"
@@ -425,6 +445,17 @@ export function EmpresaDrawer({
               step="0.01"
               type="number"
               value={form.capitalSocial}
+            />
+          </FormField>
+          <FormField label="Honorário mensal (R$)">
+            <input
+              className="field-control"
+              min="0"
+              name="honorarioMensal"
+              onChange={updateField}
+              step="0.01"
+              type="number"
+              value={form.honorarioMensal}
             />
           </FormField>
           <FormField label="Data de início" required>

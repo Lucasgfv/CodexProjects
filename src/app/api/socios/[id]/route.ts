@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { deleteSocio, updateSocio } from "@/lib/repository";
-import { getErrorMessage, socioInputSchema } from "@/lib/validation";
+import {
+  getErrorMessage,
+  getErrorStatus,
+  socioInputSchema,
+} from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -13,7 +17,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }
@@ -26,7 +30,7 @@ export async function DELETE(_: Request, context: RouteContext) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }

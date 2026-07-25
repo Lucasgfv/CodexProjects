@@ -19,7 +19,9 @@ model Empresa {
   cep                   String?
   endereco              String?
   cidade                String?
+  uf                    String?               @db.VarChar(2)
   capitalSocial         Decimal?              @db.Decimal(12, 2)
+  honorarioMensal       Decimal?              @db.Decimal(12, 2)
   dataInicio            DateTime
   dataBaixa             DateTime?
   socios                EmpresaSocio[]
@@ -36,6 +38,15 @@ model Socio {
   dataNascimento DateTime
   email          String?
   telefone       String?
+  nacionalidade  String?
+  estadoCivil    String?
+  profissao      String?
+  rg             String?
+  orgaoEmissor   String?
+  cep            String?
+  endereco       String?
+  cidade         String?
+  uf             String?        @db.VarChar(2)
   empresas       EmpresaSocio[]
   criadoEm       DateTime       @default(now())
   atualizadoEm   DateTime       @updatedAt
@@ -55,6 +66,8 @@ model EmpresaSocio {
   dataSaida              DateTime?
 
   @@unique([empresaId, socioId])
+  @@index([empresaId])
+  @@index([socioId])
 }
 
 model AlteracaoContratual {
@@ -65,6 +78,8 @@ model AlteracaoContratual {
   dataAlteracao     DateTime
   descricaoResumida String?
   criadoEm          DateTime @default(now())
+
+  @@index([empresaId])
 }
 
 model Lancamento {

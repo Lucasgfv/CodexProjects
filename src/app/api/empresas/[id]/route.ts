@@ -5,7 +5,11 @@ import {
   getEmpresa,
   updateEmpresa,
 } from "@/lib/repository";
-import { empresaInputSchema, getErrorMessage } from "@/lib/validation";
+import {
+  empresaInputSchema,
+  getErrorMessage,
+  getErrorStatus,
+} from "@/lib/validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -29,7 +33,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }
@@ -42,7 +46,7 @@ export async function DELETE(_: Request, context: RouteContext) {
   } catch (error) {
     return NextResponse.json(
       { error: getErrorMessage(error) },
-      { status: 400 },
+      { status: getErrorStatus(error) },
     );
   }
 }

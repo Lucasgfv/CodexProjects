@@ -1,8 +1,10 @@
 import {
   ArrowUpRight,
   Calculator,
+  FileCheck2,
   FileSignature,
   LayoutDashboard,
+  MessagesSquare,
   UsersRound,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -26,6 +28,20 @@ const apps = [
       "Controle entradas, saídas, competências e vencimentos por cliente.",
     href: "/apps/contabilidade",
     icon: Calculator,
+  },
+  {
+    title: "Contrato de prestação de serviços",
+    description:
+      "Preencha contrato e procuração automaticamente com os dados cadastrados.",
+    href: "/apps/contrato-prestacao-servicos",
+    icon: FileCheck2,
+  },
+  {
+    title: "Respostas rápidas",
+    description:
+      "Salve, encontre e copie mensagens frequentes do atendimento diário.",
+    href: "/apps/respostas-rapidas",
+    icon: MessagesSquare,
   },
   {
     title: "Clientes e banco de dados",
@@ -63,7 +79,7 @@ export default function AppsHubPage() {
               <div className="flex items-start justify-between">
                 <span
                   className={
-                    index === 2
+                    index === 4
                       ? "grid h-12 w-12 place-items-center rounded-2xl bg-lavender/15 text-[#786aa2]"
                       : "grid h-12 w-12 place-items-center rounded-2xl bg-[#edf3ee] text-moss"
                   }
