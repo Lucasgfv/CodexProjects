@@ -75,9 +75,29 @@ pnpm db:restore -- "C:\caminho\nexo-contabil-20260724-210000.dump"
 O script valida o dump, exige a palavra `RESTAURAR`, cria um backup preventivo
 do banco atual, restaura os dados e aplica migrations pendentes.
 
+Consulte o
+[manual completo de transferência do banco](docs/MANUAL-BANCO-DE-DADOS.md)
+para configurar outro computador e transportar o dump nos dois sentidos.
+
 Para migrar futuramente à rede da empresa, restaure o dump em um único
 computador/servidor. Os demais usuários devem acessar a aplicação pelo
 navegador; não exponha a porta `5432` diretamente na rede.
+
+## Preenchimento pelo cartÃ£o CNPJ
+
+Ao criar uma empresa em `/db-admin`, use a Ã¡rea de cartÃ£o CNPJ para arrastar
+uma imagem ou PDF. A leitura do documento ocorre temporariamente no navegador:
+o arquivo nÃ£o Ã© enviado, salvo na pasta do projeto ou gravado no PostgreSQL.
+
+O OCR local encontra o CNPJ e envia somente esse nÃºmero para a rota server-side
+de consulta pÃºblica. Os dados estruturados retornados preenchem razÃ£o social,
+nome fantasia, porte, data de abertura, endereÃ§o, CEP, cidade, UF, telefone e
+e-mail. Revise os campos antes de salvar.
+
+Se a imagem estiver ilegÃ­vel ou a consulta pÃºblica estiver indisponÃ­vel, o
+cadastro continua disponÃ­vel para preenchimento manual. O serviÃ§o utilizado Ã© a
+[BrasilAPI](https://brasilapi.com.br/), que fornece dados cadastrais pÃºblicos e
+pode sofrer limites ou indisponibilidade.
 
 ## Rotas
 

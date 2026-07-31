@@ -356,6 +356,7 @@ export function DbAdminClient({
         <EmpresaDrawer
           empresa={empresaDrawer === "new" ? null : empresaDrawer}
           onClose={() => setEmpresaDrawer(null)}
+          onCreateSocio={() => setSocioDrawer("new")}
           onError={showError}
           onSaved={(saved) => {
             const exists = empresas.some((item) => item.id === saved.id);

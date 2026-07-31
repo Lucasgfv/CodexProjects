@@ -16,6 +16,10 @@ import {
 } from "react";
 
 import { DrawerShell } from "@/components/db-admin/drawer-shell";
+import {
+  CnpjCardUploader,
+  type CnpjLookupResult,
+} from "@/components/db-admin/cnpj-card-uploader";
 import { toInputDate } from "@/lib/format";
 import type {
   EmpresaDTO,
@@ -44,6 +48,7 @@ type EmpresaForm = {
   nomeFantasia: string;
   cnpj: string;
   tipoCliente: string;
+  porte: string;
   regimeTributario: string;
   email: string;
   telefone: string;
@@ -72,6 +77,7 @@ function emptyForm(): EmpresaForm {
     nomeFantasia: "",
     cnpj: "",
     tipoCliente: "Mensal",
+    porte: "",
     regimeTributario: "Simples Nacional",
     email: "",
     telefone: "",
@@ -95,6 +101,7 @@ function toForm(empresa?: EmpresaDTO | null): EmpresaForm {
     nomeFantasia: empresa.nomeFantasia ?? "",
     cnpj: empresa.cnpj,
     tipoCliente: empresa.tipoCliente ?? "Mensal",
+    porte: empresa.porte ?? "",
     regimeTributario: empresa.regimeTributario,
     email: empresa.email ?? "",
     telefone: empresa.telefone ?? "",
@@ -157,12 +164,14 @@ export function EmpresaDrawer({
   empresa,
   socios,
   onClose,
+  onCreateSocio,
   onSaved,
   onError,
 }: {
   empresa?: EmpresaDTO | null;
   socios: SocioDTO[];
   onClose: () => void;
+  onCreateSocio?: () => void;
   onSaved: (empresa: EmpresaDTO) => void;
   onError: (message: string) => void;
 }) {
@@ -178,6 +187,23 @@ export function EmpresaDrawer({
   ) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function applyCnpjData(data: CnpjLookupResult) {
+    setForm((current) => ({
+      ...current,
+      cnpj: data.cnpj,
+      razaoSocial: data.razaoSocial || current.razaoSocial,
+      nomeFantasia: data.nomeFantasia ?? current.nomeFantasia,
+      porte: data.porte ?? current.porte,
+      dataInicio: data.dataInicio ?? current.dataInicio,
+      endereco: data.endereco ?? current.endereco,
+      cep: data.cep ?? current.cep,
+      cidade: data.cidade ?? current.cidade,
+      uf: data.uf ?? current.uf,
+      telefone: data.telefone ?? current.telefone,
+      email: data.email ?? current.email,
+    }));
   }
 
   function addSocio() {
@@ -202,6 +228,18 @@ export function EmpresaDrawer({
         },
       ],
     }));
+  }
+
+  function handleAddSocio() {
+    if (socios.length) {
+      addSocio();
+      return;
+    }
+    if (onCreateSocio) {
+      onCreateSocio();
+      return;
+    }
+    onError("Cadastre um sócio para criar o vínculo.");
   }
 
   function updateSocio(
@@ -248,6 +286,7 @@ export function EmpresaDrawer({
       nomeFantasia: form.nomeFantasia || null,
       cnpj: form.cnpj,
       tipoCliente: form.tipoCliente || null,
+      porte: form.porte || null,
       regimeTributario: form.regimeTributario,
       email: form.email || null,
       telefone: form.telefone || null,
@@ -334,6 +373,7 @@ export function EmpresaDrawer({
         onClose={onClose}
         title={empresa ? "Editar empresa" : "Nova empresa"}
       >
+        {!empresa ? <CnpjCardUploader onDataExtracted={applyCnpjData} /> : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Razão social" required>
             <input
@@ -492,14 +532,19 @@ export function EmpresaDrawer({
                 )}
                 %
               </p>
+              {!socios.length ? (
+                <p className="mt-1 text-[11px] text-[#9a6c20]">
+                  Nenhum sócio cadastrado. Crie um cadastro para vinculá-lo à empresa.
+                </p>
+              ) : null}
             </div>
             <button
               className="secondary-button h-9 px-3"
-              onClick={addSocio}
+              onClick={handleAddSocio}
               type="button"
             >
               <UserRoundPlus size={15} />
-              Adicionar sócio
+              {socios.length ? "Adicionar sócio" : "Cadastrar sócio"}
             </button>
           </div>
           <div className="divide-y divide-[#e5e8e5]">

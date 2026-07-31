@@ -20,6 +20,7 @@ export const empresaInputSchema = z.object({
   nomeFantasia: nullableText,
   cnpj: z.string().trim().min(14, "Informe um CNPJ válido."),
   tipoCliente: nullableText,
+  porte: nullableText,
   regimeTributario: z.string().trim().min(2, "Informe o regime tributário."),
   email: nullableText,
   telefone: nullableText,

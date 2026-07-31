@@ -79,15 +79,6 @@ export function AppHeader() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-lavender/25 text-xs font-semibold text-[#61577f]">
-            AC
-          </div>
-          <span className="hidden text-[12px] font-medium text-[#49534c] lg:block">
-            Ana Contadora
-          </span>
-        </div>
-
         <button
           aria-expanded={open}
           aria-label={open ? "Fechar menu" : "Abrir menu"}

@@ -33,6 +33,7 @@ export type EmpresaDTO = {
   nomeFantasia: string | null;
   cnpj: string;
   tipoCliente: string | null;
+  porte: string | null;
   regimeTributario: string;
   email: string | null;
   telefone: string | null;
