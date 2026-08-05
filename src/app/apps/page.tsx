@@ -2,6 +2,7 @@ import {
   ArrowUpRight,
   Calculator,
   FileCheck2,
+  FileText,
   FileSignature,
   LayoutDashboard,
   MessagesSquare,
@@ -15,6 +16,12 @@ import { PageHeader } from "@/components/page-header";
 export const metadata: Metadata = { title: "Hub de aplicações" };
 
 const apps = [
+  {
+    title: "Ficha cadastral",
+    description: "Revise os dados da empresa e emita uma ficha operacional em A4.",
+    href: "/apps/ficha-cadastral",
+    icon: FileText,
+  },
   {
     title: "Gerador de contratos",
     description:

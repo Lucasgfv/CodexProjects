@@ -14,6 +14,13 @@ const nullableNumber = z
   .nullable()
   .optional()
   .default(null);
+const nullableDate = z
+  .string()
+  .trim()
+  .refine((value) => !value || !Number.isNaN(Date.parse(value)), "Informe uma data válida.")
+  .nullable()
+  .optional()
+  .default(null);
 
 export const empresaInputSchema = z.object({
   razaoSocial: z.string().trim().min(2, "Informe a razão social."),
@@ -26,10 +33,25 @@ export const empresaInputSchema = z.object({
   telefone: nullableText,
   cep: nullableText,
   endereco: nullableText,
+  numeroEndereco: nullableText,
+  bairro: nullableText,
   cidade: nullableText,
   uf: nullableText.transform((value) => value?.toUpperCase() ?? null),
   capitalSocial: nullableNumber,
   honorarioMensal: nullableNumber,
+  inscricaoEstadual: nullableText,
+  inscricaoMunicipal: nullableText,
+  cnaePrincipal: nullableText,
+  cnaesSecundarios: nullableText,
+  ramoAtividade: nullableText,
+  servicoProduto: nullableText,
+  quantidadeFuncionarios: z.number().int().min(0).nullable().optional().default(null),
+  situacaoAlvaras: nullableText,
+  participaLicitacoes: z.boolean().nullable().optional().default(null),
+  contadorAnterior: nullableText,
+  dataAtualizacaoBancaria: nullableDate,
+  pendenciasFiscais: z.boolean().nullable().optional().default(null),
+  ranking: z.enum(["A", "B", "C", "D", "S", "SS"]).nullable().optional().default(null),
   dataInicio: z.string().min(8, "Informe a data de início."),
   dataBaixa: nullableText,
   sociosVinculados: z
@@ -56,6 +78,11 @@ export const empresaInputSchema = z.object({
     )
     .optional()
     .default([]),
+  referenciasComerciais: z.array(z.object({
+    nome: z.string().trim().min(1),
+    cidade: z.string().trim().min(1),
+    uf: z.string().trim().length(2).transform((value) => value.toUpperCase()),
+  })).max(2).optional().default([]),
 });
 
 export const socioInputSchema = z.object({

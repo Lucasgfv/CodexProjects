@@ -19,17 +19,44 @@ model Empresa {
   telefone              String?
   cep                   String?
   endereco              String?
+  numeroEndereco        String?
+  bairro                String?
   cidade                String?
   uf                    String?               @db.VarChar(2)
   capitalSocial         Decimal?              @db.Decimal(12, 2)
   honorarioMensal       Decimal?              @db.Decimal(12, 2)
+  inscricaoEstadual     String?
+  inscricaoMunicipal    String?
+  cnaePrincipal         String?
+  cnaesSecundarios      String?
+  ramoAtividade         String?
+  servicoProduto        String?
+  quantidadeFuncionarios Int?
+  situacaoAlvaras       String?
+  participaLicitacoes   Boolean?
+  contadorAnterior      String?
+  dataAtualizacaoBancaria DateTime?
+  pendenciasFiscais     Boolean?
+  ranking               String?
   dataInicio            DateTime
   dataBaixa             DateTime?
   socios                EmpresaSocio[]
   alteracoesContratuais AlteracaoContratual[]
   lancamentos           Lancamento[]
+  referenciasComerciais ReferenciaComercial[]
   criadoEm              DateTime              @default(now())
   atualizadoEm          DateTime              @updatedAt
+}
+
+model ReferenciaComercial {
+  id        String   @id @default(uuid())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nome      String
+  cidade    String
+  uf        String   @db.VarChar(2)
+
+  @@index([empresaId])
 }
 
 model Socio {

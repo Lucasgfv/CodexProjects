@@ -38,6 +38,7 @@ const demoStore =
 const empresaInclude = {
   socios: { include: { socio: true } },
   alteracoesContratuais: true,
+  referenciasComerciais: true,
 } satisfies Prisma.EmpresaInclude;
 
 type EmpresaRecord = Prisma.EmpresaGetPayload<{
@@ -61,6 +62,8 @@ function mapEmpresa(empresa: EmpresaRecord): EmpresaDTO {
     telefone: empresa.telefone,
     cep: empresa.cep,
     endereco: empresa.endereco,
+    numeroEndereco: empresa.numeroEndereco,
+    bairro: empresa.bairro,
     cidade: empresa.cidade,
     uf: empresa.uf,
     capitalSocial: empresa.capitalSocial
@@ -69,6 +72,22 @@ function mapEmpresa(empresa: EmpresaRecord): EmpresaDTO {
     honorarioMensal: empresa.honorarioMensal
       ? Number(empresa.honorarioMensal)
       : null,
+    inscricaoEstadual: empresa.inscricaoEstadual,
+    inscricaoMunicipal: empresa.inscricaoMunicipal,
+    cnaePrincipal: empresa.cnaePrincipal,
+    cnaesSecundarios: empresa.cnaesSecundarios,
+    ramoAtividade: empresa.ramoAtividade,
+    servicoProduto: empresa.servicoProduto,
+    quantidadeFuncionarios: empresa.quantidadeFuncionarios,
+    situacaoAlvaras: empresa.situacaoAlvaras,
+    participaLicitacoes: empresa.participaLicitacoes,
+    contadorAnterior: empresa.contadorAnterior,
+    dataAtualizacaoBancaria: empresa.dataAtualizacaoBancaria?.toISOString() ?? null,
+    pendenciasFiscais: empresa.pendenciasFiscais,
+    ranking: empresa.ranking,
+    referenciasComerciais: empresa.referenciasComerciais.map((item) => ({
+      id: item.id, nome: item.nome, cidade: item.cidade, uf: item.uf,
+    })),
     dataInicio: empresa.dataInicio.toISOString(),
     dataBaixa: empresa.dataBaixa?.toISOString() ?? null,
     socios: empresa.socios.map((vinculo) => ({
@@ -117,6 +136,8 @@ function empresaData(input: EmpresaInput) {
     telefone: input.telefone || null,
     cep: input.cep || null,
     endereco: input.endereco || null,
+    numeroEndereco: input.numeroEndereco || null,
+    bairro: input.bairro || null,
     cidade: input.cidade || null,
     uf: input.uf || null,
     capitalSocial:
@@ -126,7 +147,20 @@ function empresaData(input: EmpresaInput) {
     honorarioMensal:
       input.honorarioMensal === null
         ? null
-        : new Prisma.Decimal(input.honorarioMensal),
+      : new Prisma.Decimal(input.honorarioMensal),
+    inscricaoEstadual: input.inscricaoEstadual || null,
+    inscricaoMunicipal: input.inscricaoMunicipal || null,
+    cnaePrincipal: input.cnaePrincipal || null,
+    cnaesSecundarios: input.cnaesSecundarios || null,
+    ramoAtividade: input.ramoAtividade || null,
+    servicoProduto: input.servicoProduto || null,
+    quantidadeFuncionarios: input.quantidadeFuncionarios ?? null,
+    situacaoAlvaras: input.situacaoAlvaras || null,
+    participaLicitacoes: input.participaLicitacoes ?? null,
+    contadorAnterior: input.contadorAnterior || null,
+    dataAtualizacaoBancaria: input.dataAtualizacaoBancaria ? new Date(input.dataAtualizacaoBancaria) : null,
+    pendenciasFiscais: input.pendenciasFiscais ?? null,
+    ranking: input.ranking || null,
     dataInicio: new Date(input.dataInicio),
     dataBaixa: input.dataBaixa ? new Date(input.dataBaixa) : null,
   };
@@ -227,6 +261,11 @@ export async function createEmpresa(
           descricaoResumida: alteracao.descricaoResumida || null,
         })),
       },
+      referenciasComerciais: {
+        create: (input.referenciasComerciais ?? []).map((item) => ({
+          nome: item.nome, cidade: item.cidade, uf: item.uf,
+        })),
+      },
     },
     include: empresaInclude,
   });
@@ -278,6 +317,14 @@ export async function updateEmpresa(
           numeroAlteracao: alteracao.numeroAlteracao ?? null,
           dataAlteracao: new Date(alteracao.dataAlteracao),
           descricaoResumida: alteracao.descricaoResumida || null,
+        })),
+      });
+    }
+    await tx.referenciaComercial.deleteMany({ where: { empresaId: id } });
+    if (input.referenciasComerciais?.length) {
+      await tx.referenciaComercial.createMany({
+        data: input.referenciasComerciais.map((item) => ({
+          empresaId: id, nome: item.nome, cidade: item.cidade, uf: item.uf,
         })),
       });
     }

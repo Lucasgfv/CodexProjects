@@ -39,10 +39,26 @@ export type EmpresaDTO = {
   telefone: string | null;
   cep: string | null;
   endereco: string | null;
+  numeroEndereco?: string | null;
+  bairro?: string | null;
   cidade: string | null;
   uf: string | null;
   capitalSocial: number | null;
   honorarioMensal: number | null;
+  inscricaoEstadual?: string | null;
+  inscricaoMunicipal?: string | null;
+  cnaePrincipal?: string | null;
+  cnaesSecundarios?: string | null;
+  ramoAtividade?: string | null;
+  servicoProduto?: string | null;
+  quantidadeFuncionarios?: number | null;
+  situacaoAlvaras?: string | null;
+  participaLicitacoes?: boolean | null;
+  contadorAnterior?: string | null;
+  dataAtualizacaoBancaria?: string | null;
+  pendenciasFiscais?: boolean | null;
+  ranking?: string | null;
+  referenciasComerciais?: Array<{ id: string; nome: string; cidade: string; uf: string }>;
   dataInicio: string;
   dataBaixa: string | null;
   socios: EmpresaSocioDTO[];
@@ -82,7 +98,7 @@ export type LancamentoDTO = {
 
 export type EmpresaInput = Omit<
   EmpresaDTO,
-  "id" | "socios" | "alteracoesContratuais"
+  "id" | "socios" | "alteracoesContratuais" | "referenciasComerciais"
 > & {
   sociosVinculados?: Array<{
     socioId: string;
@@ -98,6 +114,7 @@ export type EmpresaInput = Omit<
     dataAlteracao: string;
     descricaoResumida?: string | null;
   }>;
+  referenciasComerciais?: Array<{ nome: string; cidade: string; uf: string }>;
 };
 
 export type SocioInput = Omit<SocioDTO, "id" | "totalEmpresas">;

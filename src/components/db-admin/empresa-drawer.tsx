@@ -54,10 +54,26 @@ type EmpresaForm = {
   telefone: string;
   cep: string;
   endereco: string;
+  numeroEndereco: string;
+  bairro: string;
   cidade: string;
   uf: string;
   capitalSocial: string;
   honorarioMensal: string;
+  inscricaoEstadual: string;
+  inscricaoMunicipal: string;
+  cnaePrincipal: string;
+  cnaesSecundarios: string;
+  ramoAtividade: string;
+  servicoProduto: string;
+  quantidadeFuncionarios: string;
+  situacaoAlvaras: string;
+  participaLicitacoes: string;
+  contadorAnterior: string;
+  dataAtualizacaoBancaria: string;
+  pendenciasFiscais: string;
+  ranking: string;
+  referenciasComerciais: Array<{ nome: string; cidade: string; uf: string }>;
   dataInicio: string;
   dataBaixa: string;
   socios: LinkForm[];
@@ -83,10 +99,26 @@ function emptyForm(): EmpresaForm {
     telefone: "",
     cep: "",
     endereco: "",
+    numeroEndereco: "",
+    bairro: "",
     cidade: "",
     uf: "",
     capitalSocial: "",
     honorarioMensal: "",
+    inscricaoEstadual: "",
+    inscricaoMunicipal: "",
+    cnaePrincipal: "",
+    cnaesSecundarios: "",
+    ramoAtividade: "",
+    servicoProduto: "",
+    quantidadeFuncionarios: "",
+    situacaoAlvaras: "",
+    participaLicitacoes: "",
+    contadorAnterior: "",
+    dataAtualizacaoBancaria: "",
+    pendenciasFiscais: "",
+    ranking: "",
+    referenciasComerciais: [{ nome: "", cidade: "", uf: "" }, { nome: "", cidade: "", uf: "" }],
     dataInicio: new Date().toISOString().slice(0, 10),
     dataBaixa: "",
     socios: [],
@@ -107,10 +139,26 @@ function toForm(empresa?: EmpresaDTO | null): EmpresaForm {
     telefone: empresa.telefone ?? "",
     cep: empresa.cep ?? "",
     endereco: empresa.endereco ?? "",
+    numeroEndereco: empresa.numeroEndereco ?? "",
+    bairro: empresa.bairro ?? "",
     cidade: empresa.cidade ?? "",
     uf: empresa.uf ?? "",
     capitalSocial: empresa.capitalSocial?.toString() ?? "",
     honorarioMensal: empresa.honorarioMensal?.toString() ?? "",
+    inscricaoEstadual: empresa.inscricaoEstadual ?? "",
+    inscricaoMunicipal: empresa.inscricaoMunicipal ?? "",
+    cnaePrincipal: empresa.cnaePrincipal ?? "",
+    cnaesSecundarios: empresa.cnaesSecundarios ?? "",
+    ramoAtividade: empresa.ramoAtividade ?? "",
+    servicoProduto: empresa.servicoProduto ?? "",
+    quantidadeFuncionarios: empresa.quantidadeFuncionarios?.toString() ?? "",
+    situacaoAlvaras: empresa.situacaoAlvaras ?? "",
+    participaLicitacoes: empresa.participaLicitacoes === null ? "" : empresa.participaLicitacoes ? "sim" : "nao",
+    contadorAnterior: empresa.contadorAnterior ?? "",
+    dataAtualizacaoBancaria: toInputDate(empresa.dataAtualizacaoBancaria),
+    pendenciasFiscais: empresa.pendenciasFiscais === null ? "" : empresa.pendenciasFiscais ? "sim" : "nao",
+    ranking: empresa.ranking ?? "",
+    referenciasComerciais: empresa.referenciasComerciais?.length === 2 ? empresa.referenciasComerciais : [{ nome: "", cidade: "", uf: "" }, { nome: "", cidade: "", uf: "" }],
     dataInicio: toInputDate(empresa.dataInicio),
     dataBaixa: toInputDate(empresa.dataBaixa),
     socios: empresa.socios.map((vinculo) => ({
@@ -292,6 +340,8 @@ export function EmpresaDrawer({
       telefone: form.telefone || null,
       cep: form.cep || null,
       endereco: form.endereco || null,
+      numeroEndereco: form.numeroEndereco || null,
+      bairro: form.bairro || null,
       cidade: form.cidade || null,
       uf: form.uf.trim().toUpperCase() || null,
       capitalSocial: form.capitalSocial
@@ -300,6 +350,19 @@ export function EmpresaDrawer({
       honorarioMensal: form.honorarioMensal
         ? Number(form.honorarioMensal.replace(",", "."))
         : null,
+      inscricaoEstadual: form.inscricaoEstadual || null,
+      inscricaoMunicipal: form.inscricaoMunicipal || null,
+      cnaePrincipal: form.cnaePrincipal || null,
+      cnaesSecundarios: form.cnaesSecundarios || null,
+      ramoAtividade: form.ramoAtividade || null,
+      servicoProduto: form.servicoProduto || null,
+      quantidadeFuncionarios: form.quantidadeFuncionarios === "" ? null : Number(form.quantidadeFuncionarios),
+      situacaoAlvaras: form.situacaoAlvaras || null,
+      participaLicitacoes: form.participaLicitacoes === "" ? null : form.participaLicitacoes === "sim",
+      contadorAnterior: form.contadorAnterior || null,
+      dataAtualizacaoBancaria: form.dataAtualizacaoBancaria || null,
+      pendenciasFiscais: form.pendenciasFiscais === "" ? null : form.pendenciasFiscais === "sim",
+      ranking: form.ranking || null,
       dataInicio: form.dataInicio,
       dataBaixa: form.dataBaixa || null,
       sociosVinculados: form.socios.map((vinculo) => ({
@@ -322,6 +385,7 @@ export function EmpresaDrawer({
         dataAlteracao: alteracao.dataAlteracao,
         descricaoResumida: alteracao.descricaoResumida || null,
       })),
+      referenciasComerciais: form.referenciasComerciais,
     };
 
     startTransition(async () => {
@@ -458,6 +522,12 @@ export function EmpresaDrawer({
               value={form.endereco}
             />
           </FormField>
+          <FormField label="Número">
+            <input className="field-control" name="numeroEndereco" onChange={updateField} value={form.numeroEndereco} />
+          </FormField>
+          <FormField label="Bairro">
+            <input className="field-control" name="bairro" onChange={updateField} value={form.bairro} />
+          </FormField>
           <FormField label="Cidade">
             <input
               className="field-control"
@@ -518,6 +588,28 @@ export function EmpresaDrawer({
             />
           </FormField>
         </div>
+
+        <section className="mt-7 rounded-panel border border-[#d9ded9] bg-white p-4 sm:p-5">
+          <h3 className="text-sm font-semibold">Dados da ficha cadastral</h3>
+          <p className="mt-1 text-[11px] text-[#7b847e]">Preencha todos os campos para emitir a ficha.</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <FormField label="Inscrição estadual"><input className="field-control" name="inscricaoEstadual" onChange={updateField} value={form.inscricaoEstadual} /></FormField>
+            <FormField label="Inscrição municipal"><input className="field-control" name="inscricaoMunicipal" onChange={updateField} value={form.inscricaoMunicipal} /></FormField>
+            <FormField label="CNAE principal"><input className="field-control" name="cnaePrincipal" onChange={updateField} value={form.cnaePrincipal} /></FormField>
+            <FormField label="CNAEs secundários"><input className="field-control" name="cnaesSecundarios" onChange={updateField} value={form.cnaesSecundarios} /></FormField>
+            <FormField label="Ramo de atividade"><input className="field-control" name="ramoAtividade" onChange={updateField} value={form.ramoAtividade} /></FormField>
+            <FormField label="Serviço ou produto"><input className="field-control" name="servicoProduto" onChange={updateField} value={form.servicoProduto} /></FormField>
+            <FormField label="Quantidade de funcionários"><input className="field-control" min="0" name="quantidadeFuncionarios" onChange={updateField} type="number" value={form.quantidadeFuncionarios} /></FormField>
+            <FormField label="Alvarás"><select className="field-control" name="situacaoAlvaras" onChange={updateField} value={form.situacaoAlvaras}><option value="">Selecione</option><option>Prontos</option><option>Em andamento</option><option>Não se aplica</option></select></FormField>
+            <FormField label="Participa de licitações"><select className="field-control" name="participaLicitacoes" onChange={updateField} value={form.participaLicitacoes}><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select></FormField>
+            <FormField label="Contador anterior"><input className="field-control" name="contadorAnterior" onChange={updateField} value={form.contadorAnterior} /></FormField>
+            <FormField label="Data da atualização bancária"><input className="field-control" name="dataAtualizacaoBancaria" onChange={updateField} type="date" value={form.dataAtualizacaoBancaria} /></FormField>
+            <FormField label="Pendências fiscais"><select className="field-control" name="pendenciasFiscais" onChange={updateField} value={form.pendenciasFiscais}><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select></FormField>
+            <FormField label="Ranking"><select className="field-control" name="ranking" onChange={updateField} value={form.ranking}><option value="">Selecione</option>{["A", "B", "C", "D", "S", "SS"].map((item) => <option key={item}>{item}</option>)}</select></FormField>
+          </div>
+          <h4 className="mt-6 text-xs font-semibold">Referências comerciais</h4>
+          <div className="mt-3 space-y-3">{form.referenciasComerciais.map((item, index) => <div className="grid gap-3 sm:grid-cols-[1.5fr_1fr_80px]" key={index}><input aria-label={`Referência ${index + 1}`} className="field-control" placeholder={`Comercial ${index + 1}`} value={item.nome} onChange={(event) => setForm((current) => ({ ...current, referenciasComerciais: current.referenciasComerciais.map((reference, i) => i === index ? { ...reference, nome: event.target.value } : reference) }))} /><input aria-label={`Cidade da referência ${index + 1}`} className="field-control" placeholder="Cidade" value={item.cidade} onChange={(event) => setForm((current) => ({ ...current, referenciasComerciais: current.referenciasComerciais.map((reference, i) => i === index ? { ...reference, cidade: event.target.value } : reference) }))} /><input aria-label={`UF da referência ${index + 1}`} className="field-control uppercase" maxLength={2} placeholder="UF" value={item.uf} onChange={(event) => setForm((current) => ({ ...current, referenciasComerciais: current.referenciasComerciais.map((reference, i) => i === index ? { ...reference, uf: event.target.value.toUpperCase() } : reference) }))} /></div>)}</div>
+        </section>
 
         <section className="mt-7 rounded-panel border border-[#d9ded9] bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e1e5e1] px-4 py-3">

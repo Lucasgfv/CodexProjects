@@ -132,6 +132,7 @@ a {
 }
 
 @media print {
+  @page { size: A4 portrait; margin: 0; }
   body {
     background: white !important;
   }
@@ -155,4 +156,29 @@ a {
     max-width: none !important;
     padding: 20mm !important;
   }
+
+  .ficha-sheet { border: 0 !important; box-shadow: none !important; margin: 0 !important; }
 }
+
+.ficha-sheet {
+  background: #fff;
+  border: 1px solid #111;
+  box-shadow: 0 14px 30px rgba(23, 32, 27, 0.12);
+  color: #111;
+  font-family: Arial, sans-serif;
+  margin: 0 auto;
+  max-width: 210mm;
+  padding: 7mm;
+}
+.ficha-sheet h1 { font-family: Georgia, serif; font-size: 18px; margin: 0 0 5mm; text-align: center; text-transform: uppercase; }
+.ficha-section { border: 1px solid #111; margin-top: 3px; }
+.ficha-section h2 { background: #d0d0d0; border-bottom: 1px solid #111; font-size: 10px; margin: 0; padding: 2px 4px; text-align: center; text-transform: uppercase; }
+.ficha-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+.ficha-grid > div { border-bottom: 1px solid #111; border-right: 1px solid #111; min-height: 31px; padding: 3px; }
+.ficha-grid > div:nth-child(3n) { border-right: 0; }
+.ficha-grid strong { display: block; font-size: 7px; text-transform: uppercase; }
+.ficha-grid span { display: block; font-size: 9px; margin-top: 3px; overflow-wrap: anywhere; }
+.ficha-sheet table { border-collapse: collapse; font-size: 9px; width: 100%; }
+.ficha-sheet th, .ficha-sheet td { border-right: 1px solid #111; border-bottom: 1px solid #111; padding: 4px; text-align: left; }
+.ficha-sheet th { background: #eee; font-size: 8px; text-align: center; text-transform: uppercase; }
+.ficha-sheet th:last-child, .ficha-sheet td:last-child { border-right: 0; }
