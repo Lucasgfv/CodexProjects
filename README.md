@@ -108,10 +108,29 @@ pode sofrer limites ou indisponibilidade.
 - `/apps/contrato-prestacao-servicos` — contrato e procuração preenchidos pelo banco
 - `/apps/respostas-rapidas` — biblioteca local de mensagens com backup JSON
 - `/apps/contabilidade` — entradas, saídas e vencimentos
+- `/apps/fiscal-leve` — rotina fiscal, MEIs, certificados, acessos e indicadores
 - `/apps` e `/app/apps` — hub de aplicações
 
 As mensagens rápidas ficam no `localStorage` do navegador. Exportar e importar
 JSON é o mecanismo de backup e transferência entre computadores.
+
+## Fiscal Leve
+
+O módulo Fiscal Leve usa o mesmo PostgreSQL do Nexo. Depois de aplicar as
+migrations, importe uma única vez os dados legados existentes na pasta `Flex`:
+
+```bash
+pnpm db:migrate:deploy
+pnpm db:import:fiscal
+```
+
+O importador pode ser executado novamente com segurança: ele atualiza os
+registros identificados por CNPJ, em vez de duplicá-los. Antes de publicar,
+configure `FISCAL_CREDENTIALS_KEY` com uma chave longa e exclusiva para
+criptografar as senhas de acesso manual.
+
+Consulte o [guia de publicação do Fiscal Leve](docs/FISCAL-LEVE-PRODUCAO.md)
+antes de disponibilizar o Nexo na internet.
 
 ## Validação
 

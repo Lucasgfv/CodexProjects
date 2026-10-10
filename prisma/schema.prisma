@@ -124,3 +124,99 @@ model Lancamento {
 
   @@index([empresaId, competencia])
 }
+
+model FiscalEmpresa {
+  id                String         @id @default(uuid())
+  codigo            Int?
+  nome              String
+  cnpj              String         @unique
+  cnpjDigits        String         @unique
+  inscricaoEstadual String?
+  regime            String
+  responsavel       String
+  observacoes       String         @default("")
+  tarefas           FiscalTarefa[]
+  criadoEm          DateTime       @default(now())
+  atualizadoEm      DateTime       @updatedAt
+
+  @@index([responsavel])
+  @@index([regime])
+}
+
+model FiscalTarefa {
+  id               String        @id @default(uuid())
+  empresaId        String
+  empresa          FiscalEmpresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  chave            String
+  nome             String
+  competencia      DateTime
+  status           String
+  valorOriginal    String?
+  statusAlteradoEm DateTime       @default(now())
+  criadoEm         DateTime       @default(now())
+  atualizadoEm     DateTime       @updatedAt
+
+  @@unique([empresaId, chave, competencia])
+  @@index([competencia, status])
+}
+
+model FiscalMei {
+  id                    String                 @id @default(uuid())
+  nome                  String
+  cnpj                  String                 @unique
+  cnpjDigits            String                 @unique
+  responsavel           String
+  limiteReferencia      Decimal                @default(81000) @db.Decimal(12, 2)
+  faturamentoConferido  Boolean                @default(false)
+  inativo               Boolean                @default(false)
+  observacoes           String                 @default("")
+  certificadoDescricao String?
+  certificadoAtivo     Boolean                @default(false)
+  certificadoValidoAte DateTime?
+  acessoCpf             String?
+  acessoSenha           String?
+  atividades            FiscalMeiAtividade[]
+  faturamentos          FiscalMeiFaturamento[]
+  criadoEm              DateTime               @default(now())
+  atualizadoEm          DateTime               @updatedAt
+
+  @@index([responsavel])
+  @@index([certificadoAtivo])
+}
+
+model FiscalMeiAtividade {
+  id               String    @id @default(uuid())
+  meiId            String
+  mei              FiscalMei @relation(fields: [meiId], references: [id], onDelete: Cascade)
+  chave            String
+  nome             String
+  competencia      DateTime
+  status           String
+  statusAlteradoEm DateTime  @default(now())
+  enviadoEm        DateTime?
+  criadoEm         DateTime  @default(now())
+  atualizadoEm     DateTime  @updatedAt
+
+  @@unique([meiId, chave, competencia])
+  @@index([competencia, status])
+}
+
+model FiscalMeiFaturamento {
+  id           String    @id @default(uuid())
+  meiId        String
+  mei          FiscalMei @relation(fields: [meiId], references: [id], onDelete: Cascade)
+  ano          Int
+  mes          Int
+  valor        Decimal   @default(0) @db.Decimal(12, 2)
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  @@unique([meiId, ano, mes])
+  @@index([ano, mes])
+}
+
+model FiscalConfiguracao {
+  chave        String   @id
+  valor        String
+  atualizadoEm DateTime @updatedAt
+}

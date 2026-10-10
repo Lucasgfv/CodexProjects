@@ -18,7 +18,8 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-backup.ps1",
-    "db:restore": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-restore.ps1"
+    "db:restore": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-restore.ps1",
+    "db:import:fiscal": "node scripts/import-fiscal-leve.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",

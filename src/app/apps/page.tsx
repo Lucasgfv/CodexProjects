@@ -4,6 +4,7 @@ import {
   FileCheck2,
   FileText,
   FileSignature,
+  Landmark,
   LayoutDashboard,
   MessagesSquare,
   UsersRound,
@@ -16,6 +17,13 @@ import { PageHeader } from "@/components/page-header";
 export const metadata: Metadata = { title: "Hub de aplicações" };
 
 const apps = [
+  {
+    title: "Fiscal Leve",
+    description:
+      "Acompanhe apurações, obrigações, MEIs, certificados e a rotina da equipe fiscal.",
+    href: "/apps/fiscal-leve",
+    icon: Landmark,
+  },
   {
     title: "Ficha cadastral",
     description: "Revise os dados da empresa e emita uma ficha operacional em A4.",

@@ -3,19 +3,78 @@
 @tailwind utilities;
 
 :root {
-  --canvas: #f7f8f5;
-  --surface: #ffffff;
-  --ink: #17201b;
-  --muted: #677069;
-  --line: #dce1dc;
-  --line-strong: #c8d0c9;
-  --moss: #345c45;
-  --moss-dark: #254534;
-  --sage: #7e9b86;
-  --sage-soft: #edf3ee;
-  --lavender: #a89acb;
-  --lavender-soft: #f2effa;
-  --coral: #e86d55;
+  /* Color tokens: use semantic names in components. */
+  --color-canvas: #f7f8f5;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f1f3f0;
+  --color-text: #17201b;
+  --color-text-muted: #677069;
+  --color-text-subtle: #87908a;
+  --color-border: #dce1dc;
+  --color-border-strong: #c8d0c9;
+  --color-primary: #345c45;
+  --color-primary-hover: #294d39;
+  --color-primary-subtle: #edf3ee;
+  --color-secondary: #7e9b86;
+  --color-secondary-subtle: #f0f5f1;
+  --color-accent: #a89acb;
+  --color-accent-subtle: #f2effa;
+  --color-success: #2d7a4d;
+  --color-success-subtle: #edf6ef;
+  --color-warning: #8a6426;
+  --color-warning-subtle: #fff7e8;
+  --color-danger: #c94f3d;
+  --color-danger-subtle: #fff0ec;
+  --color-info: #356f9f;
+  --color-info-subtle: #edf5fb;
+
+  /* Compatibility aliases. Prefer the tokens above in new code. */
+  --canvas: var(--color-canvas);
+  --surface: var(--color-surface);
+  --ink: var(--color-text);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --line-strong: var(--color-border-strong);
+  --moss: var(--color-primary);
+  --moss-dark: var(--color-primary-hover);
+  --sage: var(--color-secondary);
+  --sage-soft: var(--color-primary-subtle);
+  --lavender: var(--color-accent);
+  --lavender-soft: var(--color-accent-subtle);
+  --coral: var(--color-danger);
+
+  /* Typography tokens. */
+  --font-sans: "Manrope", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-document: Georgia, "Times New Roman", serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --leading-xs: 1rem;
+  --leading-sm: 1.25rem;
+  --leading-base: 1.5rem;
+  --leading-lg: 1.75rem;
+  --leading-xl: 1.75rem;
+  --leading-2xl: 2rem;
+  --leading-3xl: 2.25rem;
+  --leading-4xl: 2.5rem;
+
+  /* Geometry, elevation and motion tokens. */
+  --radius-sm: 0.5rem;
+  --radius-control: 0.75rem;
+  --radius-panel: 1.125rem;
+  --radius-pill: 999px;
+  --shadow-sm: 0 8px 24px rgba(23, 32, 27, 0.07);
+  --shadow-lg: 0 18px 60px rgba(23, 32, 27, 0.12);
+  --shadow-focus: 0 0 0 4px rgba(52, 92, 69, 0.14);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 * {
@@ -34,11 +93,7 @@ body {
     radial-gradient(circle at 72% 12%, rgba(126, 155, 134, 0.07), transparent 28rem),
     var(--canvas);
   color: var(--ink);
-  font-family:
-    "Manrope",
-    "Segoe UI Variable",
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sans);
   margin: 0;
   min-height: 100vh;
   text-rendering: optimizeLegibility;
@@ -94,20 +149,65 @@ a {
   }
 
   .field-control {
-    @apply h-11 w-full rounded-xl border border-[#d7ddd7] bg-white px-3.5 text-[13px] text-ink outline-none transition duration-200 placeholder:text-[#9aa29c] focus:border-moss focus:ring-4 focus:ring-[#345c4514] disabled:cursor-not-allowed disabled:bg-[#f1f3f0];
+    @apply h-11 w-full rounded-control border border-line bg-surface px-3.5 text-[13px] text-ink outline-none transition duration-normal placeholder:text-[#9aa29c] hover:border-line-strong focus:border-moss focus:shadow-focus disabled:cursor-not-allowed disabled:bg-[#f1f3f0];
   }
 
   .field-textarea {
-    @apply min-h-24 w-full resize-y rounded-xl border border-[#d7ddd7] bg-white px-3.5 py-3 text-[13px] leading-5 text-ink outline-none transition duration-200 placeholder:text-[#9aa29c] focus:border-moss focus:ring-4 focus:ring-[#345c4514];
+    @apply min-h-24 w-full resize-y rounded-control border border-line bg-surface px-3.5 py-3 text-[13px] leading-5 text-ink outline-none transition duration-normal placeholder:text-[#9aa29c] hover:border-line-strong focus:border-moss focus:shadow-focus disabled:cursor-not-allowed disabled:bg-[#f1f3f0];
   }
 
   .primary-button {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-moss px-4 text-[13px] font-semibold text-white shadow-[0_7px_18px_rgba(52,92,69,0.18)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#294d39] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#345c4533] disabled:cursor-not-allowed disabled:opacity-55;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-control bg-moss px-4 text-[13px] font-semibold text-white shadow-[0_7px_18px_rgba(52,92,69,0.18)] transition duration-normal hover:-translate-y-0.5 hover:bg-moss-hover focus-visible:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-55;
   }
 
   .secondary-button {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#cbd2cc] bg-white px-4 text-[13px] font-semibold text-ink transition duration-200 hover:border-[#aeb9b0] hover:bg-[#f8faf8] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#345c451f] disabled:cursor-not-allowed disabled:opacity-55;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-control border border-line-strong bg-surface px-4 text-[13px] font-semibold text-ink transition duration-normal hover:border-[#aeb9b0] hover:bg-[#f8faf8] focus-visible:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-55;
   }
+
+  .outline-button {
+    @apply secondary-button border-moss text-moss hover:bg-moss-subtle;
+  }
+
+  .danger-button {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-control bg-danger px-4 text-[13px] font-semibold text-white transition duration-normal hover:brightness-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c94f3d2e] disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .button-spinner {
+    @apply h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent;
+  }
+
+  .field-error {
+    @apply mt-1.5 text-xs text-danger;
+  }
+
+  .field-invalid {
+    @apply border-danger focus:border-danger focus:ring-[#c94f3d24];
+  }
+
+  .field-checkbox {
+    @apply h-4 w-4 rounded border-line-strong text-moss accent-moss focus-visible:outline-none focus-visible:shadow-focus;
+  }
+
+  .surface-card {
+    @apply rounded-panel border border-line bg-surface shadow-subtle;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 z-[70] grid place-items-center bg-[#17201b66] p-5 backdrop-blur-sm;
+  }
+
+  .modal-panel {
+    @apply max-h-[calc(100vh-2.5rem)] w-full max-w-2xl overflow-y-auto rounded-panel border border-line bg-surface p-5 shadow-panel sm:p-7;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+
+  .status-badge-success { @apply status-badge bg-[#edf6ef] text-success; }
+  .status-badge-warning { @apply status-badge bg-[#fff7e8] text-warning; }
+  .status-badge-danger { @apply status-badge bg-[#fff0ec] text-danger; }
+  .status-badge-info { @apply status-badge bg-[#edf5fb] text-info; }
 
   .icon-button {
     @apply inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-[#58635b] transition duration-200 hover:border-[#d7ddd7] hover:bg-white hover:text-moss focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#345c451f];
@@ -128,6 +228,108 @@ a {
   .status-dot {
     @apply inline-block h-2 w-2 rounded-full bg-[#2d7a4d];
     box-shadow: 0 0 0 4px rgba(45, 122, 77, 0.09);
+  }
+
+  .fiscal-status-select {
+    @apply h-9 w-full rounded-lg border px-2.5 text-[10px] font-semibold outline-none transition focus:ring-2;
+  }
+
+  .fiscal-status-select.pending {
+    @apply border-[#f3c8c1] bg-[#fff2ef] text-[#b84835] focus:border-coral focus:ring-[#e86d5520];
+  }
+
+  .fiscal-status-select.in_progress {
+    @apply border-[#ead49c] bg-[#fff8e7] text-[#966708] focus:border-[#d7a52d] focus:ring-[#e5ad2820];
+  }
+
+  .fiscal-status-select.done {
+    @apply border-[#bcd3c1] bg-[#edf6ef] text-[#2f7049] focus:border-moss focus:ring-[#345c4520];
+  }
+
+  .fiscal-status-select.not_applicable {
+    @apply border-[#d9ded9] bg-[#f4f6f4] text-[#6f7972] focus:border-[#aab3ac] focus:ring-[#87918920];
+  }
+
+  .fiscal-task-chip {
+    @apply inline-flex rounded-md border border-[#ead49c] bg-[#fff8e7] px-2 py-1 text-[9px] font-semibold text-[#8b620b];
+  }
+
+  .fiscal-page-button {
+    @apply grid size-8 place-items-center rounded-lg border border-[#d8ded8] bg-white text-[#5e6961] transition hover:border-[#aeb9b0] hover:text-moss disabled:cursor-not-allowed disabled:opacity-35;
+  }
+
+  .fiscal-limit-bar {
+    @apply block h-full rounded-full transition-all;
+  }
+
+  .fiscal-limit-bar.safe {
+    @apply bg-[#4f9668];
+  }
+
+  .fiscal-limit-bar.attention {
+    @apply bg-[#efb933];
+  }
+
+  .fiscal-limit-bar.danger {
+    @apply bg-coral;
+  }
+
+  .fiscal-limit-text {
+    @apply text-[10px] font-bold;
+  }
+
+  .fiscal-limit-text.safe {
+    @apply text-[#36744e];
+  }
+
+  .fiscal-limit-text.attention {
+    @apply text-[#a4720c];
+  }
+
+  .fiscal-limit-text.danger {
+    @apply text-[#bd4c39];
+  }
+
+  .fiscal-state {
+    @apply inline-flex items-center justify-center rounded-lg border px-2.5 py-1.5 text-[9px] font-bold;
+  }
+
+  .fiscal-state.success {
+    @apply border-[#bcd3c1] bg-[#eaf5ed] text-[#2f7049];
+  }
+
+  .fiscal-state.warning {
+    @apply border-[#ead49c] bg-[#fff6dc] text-[#976808];
+  }
+
+  .fiscal-state.danger {
+    @apply border-[#f1c7bf] bg-[#fff0ed] text-[#b74734];
+  }
+
+  .fiscal-inline-input {
+    @apply h-9 rounded-lg border border-[#d8ded8] bg-white px-2.5 text-[10px] text-ink outline-none transition placeholder:text-[#9ba39d] focus:border-moss focus:ring-2 focus:ring-[#345c4518];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 
