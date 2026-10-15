@@ -1,0 +1,13 @@
+.git
+.github
+.next*
+.pnpm-store
+backups
+node_modules
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.log
+*.tsbuildinfo
+docs/legacy

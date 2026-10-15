@@ -1,32 +1,28 @@
 import { NextResponse } from "next/server";
 
+import { apiErrorResponse, parseJsonBody } from "@/lib/api-response";
+import { requireApiSession } from "@/lib/auth";
 import { createEmpresa, listEmpresas } from "@/lib/repository";
-import {
-  empresaInputSchema,
-  getErrorMessage,
-  getErrorStatus,
-} from "@/lib/validation";
+import { empresaInputSchema } from "@/lib/validation";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const unauthorized = await requireApiSession(request);
+    if (unauthorized) return unauthorized;
     return NextResponse.json(await listEmpresas());
   } catch (error) {
-    return NextResponse.json(
-      { error: getErrorMessage(error) },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, request, "/api/empresas");
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const input = empresaInputSchema.parse(await request.json());
+    const unauthorized = await requireApiSession(request);
+    if (unauthorized) return unauthorized;
+    const input = await parseJsonBody(request, empresaInputSchema);
     const empresa = await createEmpresa(input);
     return NextResponse.json(empresa, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: getErrorMessage(error) },
-      { status: getErrorStatus(error) },
-    );
+    return apiErrorResponse(error, request, "/api/empresas");
   }
 }

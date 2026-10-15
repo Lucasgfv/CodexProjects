@@ -1,15 +1,21 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 
 const PREFIX = "enc:v1";
 
 function encryptionKey() {
+  const configuredKey = process.env.FISCAL_CREDENTIALS_KEY?.trim();
   const source =
-    process.env.FISCAL_CREDENTIALS_KEY ||
+    configuredKey ||
     (process.env.NODE_ENV === "production" ? "" : process.env.DATABASE_URL);
 
-  if (!source) {
+  if (
+    !source ||
+    source.length < 32 ||
+    (process.env.NODE_ENV === "production" &&
+      source.includes("gere-uma-chave"))
+  ) {
     throw new Error(
-      "Configure FISCAL_CREDENTIALS_KEY para proteger as senhas de acesso fiscal.",
+      "FISCAL_CREDENTIALS_KEY ausente ou inválida.",
     );
   }
 
@@ -26,27 +32,4 @@ export function sealSecret(value: string | null | undefined) {
   ]);
   const tag = cipher.getAuthTag();
   return [PREFIX, iv.toString("base64"), tag.toString("base64"), encrypted.toString("base64")].join(":");
-}
-
-export function openSecret(value: string | null | undefined) {
-  if (!value) return "";
-  if (!value.startsWith(`${PREFIX}:`)) return value;
-
-  const [, , ivValue, tagValue, encryptedValue] = value.split(":");
-  if (!ivValue || !tagValue || !encryptedValue) return "";
-
-  try {
-    const decipher = createDecipheriv(
-      "aes-256-gcm",
-      encryptionKey(),
-      Buffer.from(ivValue, "base64"),
-    );
-    decipher.setAuthTag(Buffer.from(tagValue, "base64"));
-    return Buffer.concat([
-      decipher.update(Buffer.from(encryptedValue, "base64")),
-      decipher.final(),
-    ]).toString("utf8");
-  } catch {
-    return "";
-  }
 }

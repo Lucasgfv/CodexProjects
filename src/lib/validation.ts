@@ -1,10 +1,11 @@
 import { z } from "zod";
 
-import { PersistenceUnavailableError } from "@/lib/errors";
+import { isValidCnpj } from "@/lib/cnpj";
 
 const nullableText = z
   .string()
   .trim()
+  .max(4000, "O texto informado é muito longo.")
   .nullable()
   .optional()
   .default(null);
@@ -17,18 +18,42 @@ const nullableNumber = z
 const nullableDate = z
   .string()
   .trim()
+  .max(40, "Informe uma data válida.")
   .refine((value) => !value || !Number.isNaN(Date.parse(value)), "Informe uma data válida.")
   .nullable()
   .optional()
   .default(null);
 
+export const cnpjInputSchema = z
+  .string()
+  .trim()
+  .max(18, "Informe um CNPJ válido.")
+  .refine(isValidCnpj, "Informe um CNPJ válido.");
+
+export const cpfInputSchema = z
+  .string()
+  .trim()
+  .max(14, "Informe um CPF válido.")
+  .refine(
+    (value) => !value || value.replace(/\D/g, "").length === 11,
+    "Informe um CPF válido.",
+  );
+
 export const empresaInputSchema = z.object({
-  razaoSocial: z.string().trim().min(2, "Informe a razão social."),
+  razaoSocial: z
+    .string()
+    .trim()
+    .min(2, "Informe a razão social.")
+    .max(160, "A razão social é muito longa."),
   nomeFantasia: nullableText,
-  cnpj: z.string().trim().min(14, "Informe um CNPJ válido."),
+  cnpj: cnpjInputSchema,
   tipoCliente: nullableText,
   porte: nullableText,
-  regimeTributario: z.string().trim().min(2, "Informe o regime tributário."),
+  regimeTributario: z
+    .string()
+    .trim()
+    .min(2, "Informe o regime tributário.")
+    .max(80, "O regime tributário é muito longo."),
   email: nullableText,
   telefone: nullableText,
   cep: nullableText,
@@ -52,7 +77,10 @@ export const empresaInputSchema = z.object({
   dataAtualizacaoBancaria: nullableDate,
   pendenciasFiscais: z.boolean().nullable().optional().default(null),
   ranking: z.enum(["A", "B", "C", "D", "S", "SS"]).nullable().optional().default(null),
-  dataInicio: z.string().min(8, "Informe a data de início."),
+  dataInicio: z
+    .string()
+    .min(8, "Informe a data de início.")
+    .max(40, "Informe uma data válida."),
   dataBaixa: nullableText,
   sociosVinculados: z
     .array(
@@ -66,6 +94,7 @@ export const empresaInputSchema = z.object({
         dataSaida: nullableText,
       }),
     )
+    .max(100, "Há sócios demais na solicitação.")
     .optional()
     .default([]),
   alteracoes: z
@@ -76,6 +105,7 @@ export const empresaInputSchema = z.object({
         descricaoResumida: nullableText,
       }),
     )
+    .max(100, "Há alterações demais na solicitação.")
     .optional()
     .default([]),
   referenciasComerciais: z.array(z.object({
@@ -86,9 +116,16 @@ export const empresaInputSchema = z.object({
 });
 
 export const socioInputSchema = z.object({
-  nome: z.string().trim().min(2, "Informe o nome."),
-  cpf: z.string().trim().min(11, "Informe um CPF válido."),
-  dataNascimento: z.string().min(8, "Informe a data de nascimento."),
+  nome: z
+    .string()
+    .trim()
+    .min(2, "Informe o nome.")
+    .max(160, "O nome é muito longo."),
+  cpf: cpfInputSchema.refine(Boolean, "Informe um CPF válido."),
+  dataNascimento: z
+    .string()
+    .min(8, "Informe a data de nascimento.")
+    .max(40, "Informe uma data válida."),
   email: nullableText,
   telefone: nullableText,
   nacionalidade: nullableText,
@@ -103,39 +140,18 @@ export const socioInputSchema = z.object({
 });
 
 export const lancamentoInputSchema = z.object({
-  empresaId: z.string().min(1, "Selecione uma empresa."),
+  empresaId: z.string().min(1, "Selecione uma empresa.").max(64),
   tipo: z.enum(["ENTRADA", "SAIDA"]),
-  descricao: z.string().trim().min(2, "Informe uma descrição."),
-  valor: z.number().positive("Informe um valor maior que zero."),
-  vencimento: z.string().min(8, "Informe o vencimento."),
-  competencia: z.string().min(8, "Informe a competência."),
+  descricao: z
+    .string()
+    .trim()
+    .min(2, "Informe uma descrição.")
+    .max(500, "A descrição é muito longa."),
+  valor: z
+    .number()
+    .positive("Informe um valor maior que zero.")
+    .max(1_000_000_000, "O valor informado é muito alto."),
+  vencimento: z.string().min(8, "Informe o vencimento.").max(40),
+  competencia: z.string().min(8, "Informe a competência.").max(40),
   pago: z.boolean(),
 });
-
-export function getErrorMessage(error: unknown) {
-  if (isDatabaseConnectionError(error)) {
-    return "PostgreSQL indisponível. Verifique o Docker e tente novamente.";
-  }
-  if (error instanceof z.ZodError) {
-    return error.issues[0]?.message ?? "Revise os dados informados.";
-  }
-  if (error instanceof Error) return error.message;
-  return "Não foi possível concluir a operação.";
-}
-
-export function getErrorStatus(error: unknown) {
-  return error instanceof PersistenceUnavailableError ||
-    isDatabaseConnectionError(error)
-    ? 503
-    : 400;
-}
-
-function isDatabaseConnectionError(error: unknown) {
-  return (
-    error instanceof Error &&
-    (error.name === "PrismaClientInitializationError" ||
-      error.message.includes("Can't reach database server") ||
-      error.message.includes("P1001") ||
-      error.message.includes("P1002"))
-  );
-}

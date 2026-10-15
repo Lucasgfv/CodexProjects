@@ -1,8 +1,10 @@
 node_modules
 .next
+.next-validation
 .pnpm-store
 .env
 .env.local
+.env.production
 *.log
 *.tsbuildinfo
 .DS_Store

@@ -427,7 +427,7 @@ function AccessRow({
       certificateActive: boolean;
       certificateExpiresAt: string | null;
       accessCpf: string;
-      accessPassword: string;
+      accessPassword?: string;
     },
   ) => Promise<void>;
 }) {
@@ -437,7 +437,7 @@ function AccessRow({
     mei.certificateExpiresAt?.slice(0, 10) || "",
   );
   const [cpf, setCpf] = useState(mei.accessCpf);
-  const [password, setPassword] = useState(mei.accessPassword);
+  const [password, setPassword] = useState("");
   const [reveal, setReveal] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -449,8 +449,10 @@ function AccessRow({
         certificateActive: active,
         certificateExpiresAt: expiresAt || null,
         accessCpf: cpf,
-        accessPassword: password,
+        ...(password ? { accessPassword: password } : {}),
       });
+      setPassword("");
+      setReveal(false);
     } finally {
       setSaving(false);
     }
@@ -492,6 +494,7 @@ function AccessRow({
       </td>
       <td>
         <input
+          autoComplete="off"
           className="fiscal-inline-input min-w-[138px]"
           onChange={(event) => setCpf(event.target.value)}
           placeholder="CPF de acesso"
@@ -501,15 +504,17 @@ function AccessRow({
       <td>
         <label className="relative block min-w-[150px]">
           <input
+            autoComplete="new-password"
             className="fiscal-inline-input w-full pr-9"
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Senha"
+            placeholder="Digite apenas para substituir"
             type={reveal ? "text" : "password"}
             value={password}
           />
           <button
             aria-label={reveal ? "Ocultar senha" : "Mostrar senha"}
             className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-[#758078]"
+            disabled={!password}
             onClick={() => setReveal((value) => !value)}
             type="button"
           >

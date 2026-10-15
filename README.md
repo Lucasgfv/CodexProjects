@@ -30,7 +30,25 @@ pnpm db:migrate:deploy
 pnpm dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Acesse [http://localhost:3000](http://localhost:3000). Usuários sem sessão são
+direcionados automaticamente para `/login`.
+
+## Acesso administrativo
+
+O Nexo usa sessões seguras armazenadas no PostgreSQL. O cadastro público está
+desativado e a instalação aceita somente um administrador. Para criar o acesso
+inicial ou trocar a senha administrativa, execute no PowerShell:
+
+```powershell
+$env:ADMIN_NAME="Administrador"
+$env:ADMIN_EMAIL="admin@empresa.com.br"
+$env:ADMIN_PASSWORD="uma-senha-forte-com-12-ou-mais-caracteres"
+pnpm auth:seed-admin
+Remove-Item Env:ADMIN_NAME,Env:ADMIN_EMAIL,Env:ADMIN_PASSWORD
+```
+
+O comando armazena somente o hash da senha e encerra as sessões anteriores.
+Também é possível alterar a senha autenticado pela página `/conta`.
 
 O PostgreSQL fica disponível somente em `127.0.0.1:5432`. Os dados permanecem
 no volume Docker `postgres_data` quando o container é reiniciado ou removido
@@ -116,18 +134,18 @@ JSON é o mecanismo de backup e transferência entre computadores.
 
 ## Fiscal Leve
 
-O módulo Fiscal Leve usa o mesmo PostgreSQL do Nexo. Depois de aplicar as
-migrations, importe uma única vez os dados legados existentes na pasta `Flex`:
+O módulo Fiscal Leve usa o mesmo PostgreSQL do Nexo. A migração inicial dos
+dados legados já foi concluída e a antiga pasta de origem foi removida. Em uma
+nova instalação, aplique as migrations normalmente:
 
 ```bash
 pnpm db:migrate:deploy
-pnpm db:import:fiscal
 ```
 
-O importador pode ser executado novamente com segurança: ele atualiza os
-registros identificados por CNPJ, em vez de duplicá-los. Antes de publicar,
-configure `FISCAL_CREDENTIALS_KEY` com uma chave longa e exclusiva para
-criptografar as senhas de acesso manual.
+Antes de publicar, configure `DATABASE_URL`, `FISCAL_CREDENTIALS_KEY` e
+`APP_ORIGIN`, `BETTER_AUTH_SECRET` e `BETTER_AUTH_URL` no cofre de segredos do
+provedor. As senhas de acesso manual são criptografadas no banco e não são
+devolvidas no carregamento geral do módulo.
 
 Consulte o [guia de publicação do Fiscal Leve](docs/FISCAL-LEVE-PRODUCAO.md)
 antes de disponibilizar o Nexo na internet.

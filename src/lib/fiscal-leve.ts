@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { openSecret, sealSecret } from "@/lib/secret-box";
+import { sealSecret } from "@/lib/secret-box";
 
 export type FiscalStatus =
   | "pending"
@@ -59,7 +59,6 @@ export type FiscalMeiDTO = {
   certificateActive: boolean;
   certificateExpiresAt: string | null;
   accessCpf: string;
-  accessPassword: string;
   activities: FiscalMeiActivityDTO[];
   updatedAt: string;
 };
@@ -75,17 +74,31 @@ const companyInclude = {
   tarefas: { orderBy: { nome: "asc" } },
 } satisfies Prisma.FiscalEmpresaInclude;
 
-const meiInclude = {
+const meiSelect = {
+  id: true,
+  nome: true,
+  cnpj: true,
+  cnpjDigits: true,
+  responsavel: true,
+  limiteReferencia: true,
+  faturamentoConferido: true,
+  inativo: true,
+  observacoes: true,
+  certificadoDescricao: true,
+  certificadoAtivo: true,
+  certificadoValidoAte: true,
+  acessoCpf: true,
+  atualizadoEm: true,
   atividades: { orderBy: { nome: "asc" } },
   faturamentos: { orderBy: [{ ano: "asc" }, { mes: "asc" }] },
-} satisfies Prisma.FiscalMeiInclude;
+} satisfies Prisma.FiscalMeiSelect;
 
 type CompanyRecord = Prisma.FiscalEmpresaGetPayload<{
   include: typeof companyInclude;
 }>;
 
 type MeiRecord = Prisma.FiscalMeiGetPayload<{
-  include: typeof meiInclude;
+  select: typeof meiSelect;
 }>;
 
 function mapCompany(company: CompanyRecord): FiscalCompanyDTO {
@@ -137,7 +150,6 @@ function mapMei(mei: MeiRecord): FiscalMeiDTO {
     certificateActive: mei.certificadoAtivo,
     certificateExpiresAt: mei.certificadoValidoAte?.toISOString() ?? null,
     accessCpf: mei.acessoCpf || "",
-    accessPassword: openSecret(mei.acessoSenha),
     activities: mei.atividades.map((activity) => ({
       id: activity.id,
       key: activity.chave,
@@ -162,7 +174,7 @@ async function findCompany(id: string) {
 async function findMei(id: string) {
   const mei = await prisma.fiscalMei.findUniqueOrThrow({
     where: { id },
-    include: meiInclude,
+    select: meiSelect,
   });
   return mapMei(mei);
 }
@@ -174,7 +186,7 @@ export async function getFiscalSnapshot(): Promise<FiscalSnapshot> {
       orderBy: { nome: "asc" },
     }),
     prisma.fiscalMei.findMany({
-      include: meiInclude,
+      select: meiSelect,
       orderBy: { nome: "asc" },
     }),
     prisma.fiscalConfiguracao.findUnique({
@@ -273,7 +285,7 @@ export async function createFiscalMei(input: {
         })),
       },
     },
-    include: meiInclude,
+    select: meiSelect,
   });
   return mapMei(mei);
 }

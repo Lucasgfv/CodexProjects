@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireApiSession } from "@/lib/auth";
 import {
   formatCnpj,
   isValidCnpj,
@@ -82,6 +83,9 @@ function normalizeCompanyData(
 }
 
 export async function GET(request: Request) {
+  const unauthorized = await requireApiSession(request);
+  if (unauthorized) return unauthorized;
+
   const cnpj = normalizeCnpj(
     new URL(request.url).searchParams.get("cnpj") ?? "",
   );

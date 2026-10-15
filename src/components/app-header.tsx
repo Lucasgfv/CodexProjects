@@ -5,7 +5,9 @@ import {
   Building2,
   Home,
   LayoutDashboard,
+  LogOut,
   Menu,
+  UserRound,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +15,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { BrandMark } from "@/components/brand-mark";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/format";
 
 const items = [
@@ -30,9 +33,19 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export function AppHeader() {
+export function AppHeader({ userName }: { userName: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await authClient.signOut();
+    } finally {
+      window.location.assign("/login");
+    }
+  }
 
   return (
     <header className="no-print fixed inset-x-0 top-0 z-50 border-b border-[#dfe3df]/90 bg-[#f7f8f5]/92 backdrop-blur-xl">
@@ -79,15 +92,34 @@ export function AppHeader() {
           })}
         </nav>
 
-        <button
-          aria-expanded={open}
-          aria-label={open ? "Fechar menu" : "Abrir menu"}
-          className="icon-button md:hidden"
-          onClick={() => setOpen((value) => !value)}
-          type="button"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            className="hidden items-center gap-2 rounded-control px-3 py-2 text-xs font-medium text-[#59635c] transition hover:bg-white hover:text-moss md:flex"
+            href="/conta"
+          >
+            <UserRound size={16} />
+            <span className="max-w-28 truncate">{userName}</span>
+          </Link>
+          <button
+            aria-label="Sair do sistema"
+            className="icon-button hidden md:inline-flex"
+            disabled={signingOut}
+            onClick={handleSignOut}
+            title="Sair"
+            type="button"
+          >
+            {signingOut ? <span className="button-spinner" /> : <LogOut size={18} />}
+          </button>
+          <button
+            aria-expanded={open}
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            className="icon-button md:hidden"
+            onClick={() => setOpen((value) => !value)}
+            type="button"
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
       {open ? (
@@ -113,6 +145,25 @@ export function AppHeader() {
               </Link>
             );
           })}
+          <div className="mt-2 border-t border-[#e2e6e2] pt-2">
+            <Link
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#59635c]"
+              href="/conta"
+              onClick={() => setOpen(false)}
+            >
+              <UserRound size={18} strokeWidth={1.8} />
+              {userName}
+            </Link>
+            <button
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-danger"
+              disabled={signingOut}
+              onClick={handleSignOut}
+              type="button"
+            >
+              <LogOut size={18} strokeWidth={1.8} />
+              {signingOut ? "Saindo..." : "Sair"}
+            </button>
+          </div>
         </nav>
       ) : null}
     </header>
