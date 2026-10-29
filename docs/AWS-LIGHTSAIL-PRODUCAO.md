@@ -1,5 +1,10 @@
 # Publicação do Nexo Contábil no AWS Lightsail
 
+> Este é o guia operacional reutilizável. A implantação efetivamente realizada,
+> incluindo plano de 1 GB com swap, evidências, problemas encontrados e estado
+> de homologação, está documentada em
+> [Histórico, arquitetura e deploy na AWS](ARQUITETURA-HISTORICO-DEPLOY-AWS.md).
+
 Esta configuração prioriza o menor custo mensal sem publicar o PostgreSQL na
 internet. Uma única instância Lightsail executa Caddy, Next.js e PostgreSQL em
 containers separados. Caddy é a única entrada pública e emite/renova o

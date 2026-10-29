@@ -3,6 +3,13 @@
 Aplicação local de gestão contábil construída com Next.js App Router,
 TypeScript, Tailwind CSS, Prisma ORM e PostgreSQL.
 
+## Documentação de arquitetura e produção
+
+- [Histórico, arquitetura e deploy na AWS](docs/ARQUITETURA-HISTORICO-DEPLOY-AWS.md)
+- [Guia operacional do AWS Lightsail](docs/AWS-LIGHTSAIL-PRODUCAO.md)
+- [Checklist de produção do Fiscal Leve](docs/FISCAL-LEVE-PRODUCAO.md)
+- [Manual do banco de dados](docs/MANUAL-BANCO-DE-DADOS.md)
+
 ## Requisitos
 
 - Node.js e pnpm
