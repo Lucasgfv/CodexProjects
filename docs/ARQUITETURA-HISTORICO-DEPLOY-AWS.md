@@ -334,9 +334,9 @@ Um IP estático foi anexado à instância. O DNS do GoDaddy recebeu um registro
 identificadores dos recursos foram omitidos ou borrados porque este documento é
 público.
 
-![IP estático anexado ao Lightsail](assets/deploy-aws/03-ip-estatico-lightsail.png)
+![IP estático anexado ao Lightsail, com endereços e identificadores borrados](assets/deploy-aws/03-ip-estatico-lightsail-anonimizado.png)
 
-![Registro DNS apontando o subdomínio para o Lightsail](assets/deploy-aws/02-dns-godaddy.png)
+![Registro DNS apontando o subdomínio para o Lightsail, com dados sensíveis borrados](assets/deploy-aws/02-dns-godaddy-anonimizado.png)
 
 Regras finais esperadas:
 
@@ -348,7 +348,7 @@ Regras finais esperadas:
 - IPv6 desativado na implantação inicial;
 - nenhuma regra para 5432.
 
-![Edição da regra SSH restrita](assets/deploy-aws/04-firewall-ssh-restrito.png)
+![Edição da regra SSH restrita, com endereços e identificadores borrados](assets/deploy-aws/04-firewall-ssh-restrito-anonimizado.png)
 
 ### 8.4 Código e segredos
 
